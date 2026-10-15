@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/ggml-org/llama.cpp",
+  "revision": "86632248188c106d749fad34a1dcd237c95863d4",
+  "upstream_authorship": "llama.cpp, server and GGML retain their original authors and licenses",
+  "extension_path": "tools/loraai_omni_native",
+  "integration_changes": [
+    "opt-in LLAMA_OMNI CMake hook",
+    "CUDA GGML_PREC_F32 handling patch"
+  ],
+  "upgrade_method": "Apply the standalone kit to a fresh checkout; review server/GGML API and precision changes, rebuild, run numerical and voice regressions.",
+  "git_relationship": "Original Omni additions and release packaging are maintained as separate commits above the pinned upstream revision."
+}

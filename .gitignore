@@ -153,3 +153,19 @@ a.out.*
 
 AGENTS.local.md
 .pi/SYSTEM.md
+
+# Qwen3-Omni extension - local secrets and speech data
+.env
+.env.*
+*.pem
+*.key
+*.pth
+*.safetensors
+*.wav
+*.pcm
+*.raw
+
+# Retain original upstream reference materials and build helper in a fresh fork.
+!/build-xcframework.sh
+!/benches/dgx-spark/run-aime-120b-t8-x8-high.log
+!/docs/development/llama-star/idea-arch.key

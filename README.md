@@ -1,126 +1,51 @@
-# llama.cpp
+![Qwen3-Omni native speech extension for llama.cpp](docs/omni/banner.svg)
 
-![llama](https://raw.githubusercontent.com/ggml-org/llama.brand/refs/heads/master/cover/llama-cpp/cover-llama-cpp-dark.svg)
+# Native Qwen3-Omni speech for llama.cpp
 
-<div align="center">
+An independent C++/GGML extension for **Qwen3-Omni-30B-A3B-Instruct**: GPU Talker → Code Predictor → Code2Wav, mixed-Q4 Talker, immediate text deltas, incremental PCM, cancellation and memory-aware loading.
 
-<b>LLM inference in C/C++</b>
+**llama.cpp, its server and GGML are upstream projects, not our work.** This repository adds native Omni speech support to the pinned upstream source. Original upstream copyright and licenses remain intact. The original Omni additions are copyright 2026 Andrei Tolkachev, MIT licensed. Built with AI assistance and human-directed validation; not an official ggml-org or Qwen release.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Release](https://img.shields.io/github/v/release/ggml-org/llama.cpp?filter=v*&color=brightgreen)](https://github.com/ggml-org/llama.cpp/releases?q=tag:v0)
-[![Nightly](https://img.shields.io/github/v/release/ggml-org/llama.cpp?label=nightly&filter=b*&color=orange)](https://github.com/ggml-org/llama.cpp/releases?q=b)
-[![Server](https://img.shields.io/github/actions/workflow/status/ggml-org/llama.cpp/server.yml?label=Server)](https://github.com/ggml-org/llama.cpp/actions/workflows/server.yml)
-[![Docker](https://img.shields.io/github/actions/workflow/status/ggml-org/llama.cpp/docker.yml?label=Docker)](https://github.com/ggml-org/llama.cpp/actions/workflows/docker.yml)
-[![Winget](https://img.shields.io/github/actions/workflow/status/ggml-org/llama.cpp/winget.yml?label=Winget)](https://github.com/ggml-org/llama.cpp/actions/workflows/winget.yml)
+[Русский](README.ru.md) · [Build, weights and API](tools/loraai_omni_native/README.md) · [Native validation and timings](tools/loraai_omni_native/README.md#measurements-and-qualification) · [Licensing](LICENSING.md) · [Releases](https://github.com/andrei-tolkachev/qwen3-omni-llama-cpp-native/releases)
 
-[ggml](https://github.com/ggml-org/ggml) / [ops](https://github.com/ggml-org/llama.cpp/blob/master/docs/ops.md) / [maintainer PRs](https://github.com/ggml-org/llama.cpp/issues?q=is%3Apr%20is%3Aopen%20draft%3AFalse%20(author%3Argerganov%20OR%20author%3AKitaitiMakoto%20OR%20author%3Adanbev%20OR%20author%3Aaldehir%20OR%20author%3Amax-krasnyansky%20OR%20author%3ACISC%20OR%20author%3Aggerganov%20OR%20author%3Aam17an%20OR%20author%3Abartowski1182%20OR%20author%3Anikwen%20OR%20author%3Ahipudding%20OR%20author%3AServeurpersoCom%20OR%20author%3Apwilkin%20OR%20author%3Areeselevine%20OR%20author%3Angxson%20OR%20author%3Ajeffbolznv%20OR%20author%3Amarty1885%20OR%20author%3A0cc4m%20OR%20author%3ATitaniumtown%20OR%20author%3Aangt%20OR%20author%3AIMbackK%20OR%20author%3Aarthw%20OR%20author%3AJohannesGaessler%20OR%20author%3AORippler%20OR%20author%3Aruixiang63%20OR%20author%3Axctan%20OR%20author%3Aallozaur%20OR%20author%3Ayomaytk%20OR%20author%3Aaendk%20OR%20author%3Agaugarg-nv%20OR%20author%3Ataronaeo%20OR%20author%3Aforforever73%20OR%20author%3Alhez%20OR%20author%3Anetrunnereve%20OR%20author%3Afairydreaming)%20sort%3Aupdated-desc) / [dev stats](https://github.com/ggml-org/llama.cpp-dev) / [lib llama API](https://github.com/ggml-org/llama.cpp/issues/9289) / [llama-server REST API](https://github.com/ggml-org/llama.cpp/issues/9291)
-
-</div>
-
-## Quick start
-
-A few options to get `llama.cpp` installed on your machine:
-
-- Visit https://llama.app and follow the instructions
-- Run with Docker - see our [Docker documentation](docs/docker.md)
-- Download pre-built binaries from the [releases page](https://github.com/ggml-org/llama.cpp/releases)
-- Build from source by cloning this repository - check out [our build guide](docs/build.md)
-
-Once installed:
+## Build
 
 ```sh
-# Download and run a model directly from Hugging Face
-llama cli -hf ggml-org/Qwen3.5-0.8B-GGUF
-
-# Launch OpenAI-compatible API server
-llama serve -hf ggml-org/Qwen3.5-0.8B-GGUF
+cmake -S . -B build-omni -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_TESTS=OFF \
+  -DLLAMA_OMNI=ON -DGGML_CUDA=ON
+cmake --build build-omni --target omni-server omni-generate omni-decode omni-quantize -j4
 ```
 
-<table align="center">
-    <tr>
-        <td align="center" width=50%>
-            <img width="1310" height="888" alt="VLM session with `llama cli`" src="https://github.com/user-attachments/assets/88726b48-1713-48aa-a525-95a02e78afc4" />
-            <i>VLM session with <b>llama cli</b></i>
-        </td>
-        <td align="center">
-            <img width="1392" height="958" alt="Built-in web UI against `llama serve` running Qwen 3.6" src="https://github.com/user-attachments/assets/b402f972-2e32-4def-8771-8d849f08cf2e" />
-            <i>Built-in web UI against <b>llama serve</b></i>
-        </td>
-    </tr>
-<table>
+Obtain the matching Thinker/mmproj GGUF and convert the speech components following the [module instructions](tools/loraai_omni_native/README.md#weights). No model weights are distributed.
 
-## Description
+```sh
+build-omni/bin/omni-server \
+  -m /models/omni/thinker.gguf --mmproj /models/omni/mmproj.gguf \
+  --host 127.0.0.1 --port 8081 -c 65536 -ngl auto --fit on --fit-target 1024
+python3 tools/loraai_omni_native/scripts/voice_client.py --text 'Say hello briefly.'
+```
 
-The main goal of `llama.cpp` is to enable LLM (and VLM) inference with minimal setup and state-of-the-art performance on
-a wide range of hardware - locally and in the cloud.
+The example client uses protocol-2 SSE, prints deltas immediately and plays PCM with `ffplay`. Ctrl-C stops playback and requests cancellation. [Curl, audio input and protocol details](tools/loraai_omni_native/README.md#run-and-stream).
 
-- Plain C/C++ implementation without any dependencies
-- Apple silicon is a first-class citizen - optimized via ARM NEON, Accelerate and Metal frameworks
-- AVX, AVX2, AVX512 and AMX support for x86 architectures
-- RVV, ZVFH, ZFH, ZICBOP and ZIHINTPAUSE support for RISC-V architectures
-- 1.5-bit, 2-bit, 3-bit, 4-bit, 5-bit, 6-bit, and 8-bit integer quantization for faster inference and reduced memory use
-- Custom CUDA kernels for running LLMs on NVIDIA GPUs (support for AMD GPUs via HIP and Moore Threads GPUs via MUSA)
-- Vulkan and SYCL backend support
-- CPU+GPU hybrid inference to partially accelerate models larger than the total VRAM capacity
+## Scope and known limits
 
-The `llama.cpp` project is build on top of the [ggml](https://github.com/ggml-org/ggml) library.
+- Historical GPU qualification: **Linux x86-64, CUDA, RTX 5090**. The adapter currently requires Linux ELF interposition; other GPUs/platforms are not qualified. This is not a full-duplex microphone implementation.
+- Mixed-Q4 Talker is preferred automatically when its expected file exists. **BF16 stalled in CUDA expert multiplication on one input.** Passing that input with Q4 does not prove the BF16 defect fixed. Predictor and Code2Wav remain BF16.
+- A synthetic 64,200-token prompt was tested with a 65,536-token context. 128K is not qualified.
+- Phrase-grouped synthesis is in the native module. A **600.97-second segmented PCM test** passed, while a **separate 12-minute unsegmented run became unintelligible**. These results must be read together. ASR checks of a small Russian test set are not broad listening, English or multilingual qualification.
+- Non-loopback binding requires an API key. Both voice and cancel routes use upstream key validation. Remote deployments still need TLS and appropriate access controls. [Security](SECURITY_OMNI.md).
 
-## Supported backends
+See [VALIDATION.json](tools/loraai_omni_native/VALIDATION.json) for historical native evidence and [RELEASE_VALIDATION.json](RELEASE_VALIDATION.json) for release preparation checks.
 
-| Backend | Target devices |
-| --- | --- |
-| [BLAS](docs/build.md#blas-build) | All |
-| [BLIS](docs/backend/BLIS.md) | All |
-| [CANN](docs/build.md#cann) | Ascend NPU |
-| [CUDA](docs/build.md#cuda) | Nvidia GPU |
-| [HIP](docs/build.md#hip) | AMD GPU |
-| [Hexagon [In Progress]](docs/backend/snapdragon/README.md) | Snapdragon |
-| [IBM zDNN](docs/backend/zDNN.md) | IBM Z & LinuxONE |
-| [MUSA](docs/build.md#musa) | Moore Threads GPU |
-| [Metal](docs/build.md#metal-build) | Apple Silicon |
-| [OpenCL](docs/backend/OPENCL.md) | Adreno GPU |
-| [OpenVINO [In Progress]](docs/backend/OPENVINO.md) | Intel CPUs, GPUs, and NPUs |
-| [RPC](https://github.com/ggml-org/llama.cpp/tree/master/tools/rpc) | All |
-| [SYCL](docs/backend/SYCL.md) | Intel GPU |
-| [VirtGPU](docs/backend/VirtGPU.md) | VirtGPU APIR |
-| [Vulkan](docs/build.md#vulkan) | GPU |
-| [WebGPU](docs/build.md#webgpu) | All |
-| [ZenDNN](docs/build.md#zendnn) | AMD CPU |
+## Source packages and updates
 
-## Documentation
+Releases provide a full source archive and a smaller **standalone upgrade kit**, with SHA-256 checksums and per-file manifests. The module in both archives is identical. The kit contains the native extension, conversion tools, numerical fixtures and one CUDA precision patch.
 
-#### Tools
+Base: [ggml-org/llama.cpp `86632248`](https://github.com/ggml-org/llama.cpp/commit/86632248188c106d749fad34a1dcd237c95863d4). Apply the kit to a fresh checkout with `scripts/apply_to_llama.py --check`, review compatibility changes, then rebuild and run the native regressions. Compatibility with arbitrary newer upstream revisions is not guaranteed. See [UPSTREAM.json](UPSTREAM.json).
 
-- [cli](tools/cli/README.md)
-- [completion](tools/completion/README.md)
-- [server](tools/server/README.md)
-- [GBNF grammars](grammars/README.md)
+```sh
+python3 scripts/verify_source_manifest.py
+```
 
-#### Development
-
-- [How to build](docs/build.md)
-- [Running on Docker](docs/docker.md)
-- [Build on Android](docs/android.md)
-- [Multi-GPU usage](docs/multi-gpu.md)
-- [Performance troubleshooting](docs/development/token_generation_performance_tips.md)
-- [GGML tips & tricks](https://github.com/ggml-org/llama.cpp/wiki/GGML-Tips-&-Tricks)
-- [XCFramework](docs/xcframework.md)
-- [Completions](docs/completions.md)
-- [Models](docs/models.md)
-- [Release process](docs/release.md)
-
-## Contributing
-
-- Contributors can open PRs
-- Collaborators will be invited based on contributions
-- Maintainers can push to branches in the `llama.cpp` repo and merge PRs into the `master` branch
-- Any help with managing issues, PRs and projects is very appreciated!
-- Read the [CONTRIBUTING.md](CONTRIBUTING.md) for more information
-
-## Acknowledgements
-
-- [yhirose/cpp-httplib](https://github.com/yhirose/cpp-httplib) - Single-header HTTP server, used by `llama-server` - MIT license
-- [nothings/stb](https://github.com/nothings/stb) - Single-header image format decoder, used by multimodal subsystem - Public domain
-- [nlohmann/json](https://github.com/nlohmann/json) - Single-header JSON library, used by various tools/examples - MIT License
-- [mackron/miniaudio](https://github.com/mackron/miniaudio) - Single-header audio format decoder, used by multimodal subsystem - Public domain
-- [sheredom/subprocess.h](https://github.com/sheredom/subprocess.h) - Single-header process launching solution for C and C++ - Public domain
+For ordinary llama.cpp functionality, use the [original upstream documentation](https://github.com/ggml-org/llama.cpp/tree/86632248188c106d749fad34a1dcd237c95863d4). Its standard prebuilt binaries do not include this Omni extension.

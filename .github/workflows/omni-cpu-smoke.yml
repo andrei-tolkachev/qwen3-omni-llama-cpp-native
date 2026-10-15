@@ -1,0 +1,30 @@
+name: Native Omni CPU compile and parser smoke checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build libssl-dev
+      - name: Verify snapshot source hashes
+        run: python3 scripts/verify_source_manifest.py
+      - name: Configure CPU-only compile (not GPU qualification)
+        run: cmake -S . -B build-omni-ci -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_OMNI=ON -DGGML_CUDA=OFF -DLLAMA_CURL=OFF
+      - name: Compile native integration and fixture tests
+        run: cmake --build build-omni-ci --target omni-server omni-generate omni-decode omni-quantize omni-audio-join-test omni-visual-reply-test omni-server-security-test -j2
+      - name: Run stand-alone C++ tests
+        run: |
+          ./build-omni-ci/bin/omni-audio-join-test
+          ./build-omni-ci/bin/omni-visual-reply-test
+          ./build-omni-ci/bin/omni-server-security-test
+      - name: Exercise protocol-2 example client without model weights
+        run: python3 tools/loraai_omni_native/tests/check_voice_client.py

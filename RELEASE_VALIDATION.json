@@ -1,0 +1,40 @@
+{
+  "version": "0.1.1",
+  "prepared_on": "2026-10-16",
+  "scope": "Standalone native Omni extension and pinned upstream source; no model weights.",
+  "checks": {
+    "cpu_integrated_build": "passed: omni-server, omni-generate, omni-decode, omni-quantize, audio-join, visual-reply and server-security targets",
+    "cpu_audio_join": "passed: 10 ms overlap, no inserted silence, unchanged within-phrase samples",
+    "cpu_visual_reply": "passed: UTF-8 splits, pointer binding, malformed/truncated suffixes",
+    "http_authentication": "passed: actual upstream HTTP middleware on ephemeral loopback; both voice and cancel reject absent/wrong key with 401 and accept the test key",
+    "non_loopback_startup": "passed: 0.0.0.0 without key refuses before model loading; unit cases include IPv4, IPv6, hostname and empty keys",
+    "pcm_example_client": "passed: synthetic HTTP/SSE fixture; byte-exact PCM, stale generation rejected, gap/EOF/error cancel and remove partial output",
+    "standalone_build_source_guard": "passed: incompatible library-source directory rejected by CMake",
+    "cuda_module_build": "passed against retained matching pinned upstream CUDA shared libraries with the precision patch; not a fresh CUDA rebuild of all upstream libraries",
+    "cuda_numerical": {
+      "ok": true,
+      "exact_recurrent_frames": 2,
+      "decoder_samples": 12885,
+      "decoder_max_abs_error": 7.972121238708496e-07,
+      "threshold": 0.0001,
+      "admission_budget_MiB": 4096,
+      "platform": "Linux x86-64, CUDA 13.2, RTX 5090"
+    },
+    "small_budget_negative_probe": "1400 MiB admitted the recurrent-frame test but rejected decoder workspace explicitly; this is not a supported total VRAM minimum",
+    "vendor_original_hashes": "all 13 original source hashes verified; every distributed vendor source has MIT identification and per-file provenance",
+    "upstream_root_license": "byte-identical to pinned upstream",
+    "secret_scan": {
+      "tool": "Gitleaks 8.30.1",
+      "default_rules": true,
+      "initial_tree_and_single_commit_history_findings": 47,
+      "reviewed_false_positives": "43 SHA-256 manifest matches, 1 synthetic PNG, 1 placeholder curl key, 2 xxhash intrinsic names",
+      "narrow_allowlists": ".gitleaks.toml",
+      "clean_tree_unresolved_findings": 0
+    }
+  },
+  "limitations": [
+    "No new long-form voice/listening benchmark in release preparation. Historical GPU evidence is in tools/loraai_omni_native/VALIDATION.json.",
+    "No GPU server end-to-end rerun or additional platform qualification in release preparation.",
+    "Secret scanning does not prove absence of all sensitive information. Source scope and added documentation were reviewed separately."
+  ]
+}

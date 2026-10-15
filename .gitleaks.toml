@@ -1,0 +1,35 @@
+title = "Omni source release: default rules with narrow reviewed false positives"
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "SHA-256 entries in source integrity manifests, not API keys"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|/)SOURCE_MANIFEST\.json$''']
+regexTarget = "secret"
+regexes = ['''^[a-f0-9]{32,64}$''']
+
+[[allowlists]]
+description = "Upstream synthetic one-pixel PNG fixture"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|/)tools/server/tests/unit/test_completion\.py$''']
+regexTarget = "secret"
+regexes = ['''^iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk\+A8AAQUBAScY42YAAAAASUVORK5CYII=$''']
+
+[[allowlists]]
+description = "Upstream curl placeholder, not a credential"
+targetRules = ["curl-auth-header"]
+condition = "AND"
+paths = ['''(^|/)tools/server/README\.md$''']
+regexTarget = "secret"
+regexes = ['''^your-api-key$''']
+
+[[allowlists]]
+description = "Upstream xxhash AVX-512 intrinsic names, not keys"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|/)vendor/hash/xxhash/xxhash\.h$''']
+regexTarget = "secret"
+regexes = ['''^_mm512_(srli_epi64)$''']
