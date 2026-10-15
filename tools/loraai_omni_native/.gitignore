@@ -1,0 +1,10 @@
+/build/
+__pycache__/
+.env
+.env.*
+*.pem
+*.key
+*.safetensors
+*.gguf
+*.wav
+*.pcm

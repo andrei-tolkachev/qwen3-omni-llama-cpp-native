@@ -1,0 +1,36 @@
+--- a/ggml/src/ggml-cuda/ggml-cuda.cu
++++ b/ggml/src/ggml-cuda/ggml-cuda.cu
+@@ -1421,6 +1421,21 @@
+     const int64_t ne_dst = ggml_nelements(dst);
+     cudaStream_t main_stream = ctx.stream();
+     cublasHandle_t cublas_h = ctx.cublas_handle();
++#if !defined(GGML_USE_HIP) && !defined(GGML_USE_MUSA)
++    struct math_mode_guard {
++        cublasHandle_t handle;
++        cublasMath_t saved;
++        bool active;
++        math_mode_guard(cublasHandle_t h, bool enabled): handle(h), active(enabled) {
++            if (active) {
++                CUBLAS_CHECK(cublasGetMathMode(handle, &saved));
++                CUBLAS_CHECK(cublasSetMathMode(handle, CUBLAS_PEDANTIC_MATH));
++            }
++        }
++        ~math_mode_guard() { if (active) CUBLAS_CHECK(cublasSetMathMode(handle, saved)); }
++    } precision(cublas_h, dst->op_params[0] == GGML_PREC_F32);
++#endif
++
+ 
+     const size_t src0_ts = ggml_type_size(src0->type);
+     GGML_ASSERT(nb00 == src0_ts);
+@@ -1824,6 +1839,11 @@
+     // If src0 is a temporary compute buffer it may have some padding that needs to be cleared for mul_mat_vec_q or mul_mat_q.
+     // But if src0 is also a view of another tensor then this cannot be done safely because it may overwrite valid tensor data.
+     // Therefore, in such cases use cuBLAS.
++    // Custom F32 tensor-core kernels use reduced mantissa precision.
++    if (dst->op_params[0] == GGML_PREC_F32 && src0->type == GGML_TYPE_F32) {
++        ggml_cuda_mul_mat_cublas(ctx, src0, src1, dst);
++        return;
++    }
+     const bool bad_padding_clear = ggml_backend_buffer_get_usage(src0->buffer) == GGML_BACKEND_BUFFER_USAGE_COMPUTE
+         && ggml_nbytes(src0) != ggml_backend_buffer_get_alloc_size(src0->buffer, src0) && src0->view_src;
+     if (bad_padding_clear || src1->type != GGML_TYPE_F32 || dst->type != GGML_TYPE_F32) {

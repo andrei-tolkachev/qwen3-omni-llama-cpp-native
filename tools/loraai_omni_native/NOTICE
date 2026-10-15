@@ -1,0 +1,15 @@
+Native Qwen3-Omni extension for llama.cpp
+Copyright (c) 2026 Andrei Tolkachev, for the original Omni additions.
+
+llama.cpp, its server and GGML are upstream work by their respective authors.
+Their original MIT license and copyright notices remain unchanged. This
+extension does not claim ownership of those projects.
+
+The reference kernels in vendor/ originate in the author's S1B14L v0.5.25
+cumulative Omni source archive and are distributed under MIT. Per-file origin,
+original and distributed hashes are recorded in vendor/provenance.json.
+AI assisted the implementation, with human-directed validation.
+
+This is an independent extension, not an official ggml-org or Qwen release.
+Model weights are obtained separately under their original license.
+Numerical fixtures contain short validation activations/codes/PCM, not weights.

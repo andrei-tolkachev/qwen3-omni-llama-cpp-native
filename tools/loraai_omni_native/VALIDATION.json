@@ -1,0 +1,245 @@
+{
+  "upstream_commit": "86632248188c106d749fad34a1dcd237c95863d4",
+  "platform": "Linux x86-64, CUDA, RTX 5090 (only tested GPU)",
+  "integrated_cmake_build": "passed: omni-server, omni-generate, omni-decode, omni-quantize (Linux/CUDA)",
+  "numerical": {
+    "reference": "retained independent S1B14L/B13D6 laboratory fixtures",
+    "recurrent_frames_exact": 2,
+    "decoder_samples": 12885,
+    "decoder_max_abs_error": 7.972121238708496e-07,
+    "decoder_threshold": 0.0001,
+    "converted_weights_and_1000_MiB_weight_budget": "passed; Talker, Predictor and Code2Wav used GPU paging"
+  },
+  "native_cancel": {
+    "during_text_seconds": 0.00882,
+    "during_speech_seconds": 0.10119,
+    "same_native_server_survived_both": true
+  },
+  "full_sentence_speech_checks": [
+    {
+      "text": "Я готова помочь. Расскажи, что ты хочешь сделать.",
+      "finish": "stop",
+      "backend": "gpu",
+      "memory": "staged",
+      "seconds": 10.90626420499757,
+      "independent_asr": "Я готова помочь. Расскажи, что ты хочешь сделать."
+    },
+    {
+      "text": "Сегодня мы проверяем голосовой ответ и передачу текста по частям.",
+      "finish": "stop",
+      "backend": "gpu",
+      "memory": "staged",
+      "seconds": 9.949144125002931,
+      "independent_asr": "Сегодня мы проверяем голосовой ответ и передачу текста по частям."
+    }
+  ],
+  "speech_quality_scope": "Both final full-sentence checks transcribed exactly. Earlier short-greeting ASR sometimes reported extra suffixes; no listening-based or broad language quality evaluation is claimed.",
+  "conditioning_reference": {
+    "final_sampled_thinker_eos_in_hidden_states": false,
+    "matches_HF_generation_hidden_state_length": true
+  },
+  "talker_q4": {
+    "profile": "Q4_K-gate-up-Q4_0-down-BF16-sensitive-v1",
+    "integrity": {
+      "ok": true,
+      "quantized_experts": 60,
+      "unchanged_bf16_tensors": 357,
+      "types": {
+        "30": 357,
+        "12": 40,
+        "2": 20
+      },
+      "source_bytes": 6649234624,
+      "output_bytes": 2308130080,
+      "metadata_only_difference_from_qualified_weights": true
+    },
+    "gpu_resident_weights_MiB": 2201.33,
+    "bf16_gpu_resident_weights_MiB": 6341.33,
+    "resident_vs_paged_codes": "exact match for two recurrent frames with 1000 MiB resident-weight budget; not a 1000 MiB total VRAM claim",
+    "quality": [
+      {
+        "text": "Привет!",
+        "finish": "stop",
+        "backend": "gpu",
+        "memory": "resident",
+        "seconds": 5.410658863999743,
+        "duration": 0.536875,
+        "peak_amplitude": 24956,
+        "independent_asr": "Привет."
+      },
+      {
+        "text": "Я готова помочь. Расскажи, что ты хочешь сделать.",
+        "finish": "stop",
+        "backend": "gpu",
+        "memory": "resident",
+        "seconds": 2.647961774000123,
+        "duration": 4.616875,
+        "peak_amplitude": 17989,
+        "independent_asr": "Я готова помочь. Расскажи, что ты хочешь сделать."
+      },
+      {
+        "text": "Сегодня мы проверяем голосовой ответ и передачу текста по частям.",
+        "finish": "stop",
+        "backend": "gpu",
+        "memory": "resident",
+        "seconds": 2.2607633550001083,
+        "duration": 4.776875,
+        "peak_amplitude": 22654,
+        "independent_asr": "Сегодня мы проверяем голосовой ответ и передачу текста по частям."
+      },
+      {
+        "text": "Проверка связи. Один, два, три, четыре, пять.",
+        "finish": "stop",
+        "backend": "gpu",
+        "memory": "resident",
+        "seconds": 2.751153499999873,
+        "duration": 5.256875,
+        "peak_amplitude": 23276,
+        "independent_asr": "Проверка связи. Один, два, три, четыре, пять."
+      }
+    ],
+    "speech_seed": "1234 + test index",
+    "original_failed_audio": "Q4 completed same input in resident (2.440, 1.889 seconds) and staged (2.934 seconds) modes",
+    "quality_scope": "Four short Russian phrases transcribed correctly; not a broad listening or multilingual quality benchmark",
+    "bf16_limitation": "One captured input stalled in the previous BF16 CUDA expert multiplication path. Q4 completes it; the underlying BF16 kernel is not universally qualified."
+  },
+  "evidence_period": "2026-10-11 through 2026-10-13; historical measurements, not rerun during release preparation",
+  "context": {
+    "context_capacity": 65536,
+    "native_context_probe": [
+      {
+        "input_tokens": 60,
+        "first_delta_seconds": 0.032,
+        "total_seconds": 1.954,
+        "speech_backend": "gpu",
+        "memory_mode": "resident",
+        "thinker_rows": 26,
+        "text": "Я готова продолжить разговор.",
+        "gpu_memory": "26093 MiB, 32607 MiB"
+      },
+      {
+        "input_tokens": 64200,
+        "first_delta_seconds": 12.51,
+        "total_seconds": 14.438,
+        "speech_backend": "gpu",
+        "memory_mode": "resident",
+        "thinker_rows": 26,
+        "text": "Я готова продолжить разговор.",
+        "gpu_memory": "26125 MiB, 32607 MiB"
+      }
+    ],
+    "native_dialogue": "five GPU speech turns; forced empty completion followed by a successful request in the same process"
+  },
+  "codec_stream": {
+    "chunk_codec_frames": 16,
+    "pcm_format": "s16le/24000/mono",
+    "numerical": [
+      {
+        "snr_db": 221.56882262475818,
+        "rms_error": 0.0,
+        "fixture": "reference",
+        "chunk": null,
+        "samples": 12885,
+        "max_abs_error": 0.0,
+        "boundary_max_abs_error": 0
+      },
+      {
+        "snr_db": 59.18342770911121,
+        "rms_error": 0.00013160419886769765,
+        "fixture": "reference",
+        "chunk": 1,
+        "samples": 12885,
+        "max_abs_error": 0.0008404552936553955,
+        "boundary_max_abs_error": 0.00033676624298095703
+      },
+      {
+        "snr_db": 59.2018753577828,
+        "rms_error": 0.00013132498605198474,
+        "fixture": "reference",
+        "chunk": 3,
+        "samples": 12885,
+        "max_abs_error": 0.0009949952363967896,
+        "boundary_max_abs_error": 0.00030550360679626465
+      },
+      {
+        "snr_db": 221.56882262475818,
+        "rms_error": 0.0,
+        "fixture": "reference",
+        "chunk": 16,
+        "samples": 12885,
+        "max_abs_error": 0.0,
+        "boundary_max_abs_error": 0.0
+      },
+      {
+        "snr_db": 221.7700637468444,
+        "rms_error": 0.0,
+        "fixture": "long",
+        "chunk": null,
+        "samples": 214485,
+        "max_abs_error": 0.0,
+        "boundary_max_abs_error": 0
+      },
+      {
+        "snr_db": 64.07473338119235,
+        "rms_error": 7.669490578575205e-05,
+        "fixture": "long",
+        "chunk": 3,
+        "samples": 214485,
+        "max_abs_error": 0.0010070689022541046,
+        "boundary_max_abs_error": 0.0005843937397003174
+      },
+      {
+        "snr_db": 59.38533301485825,
+        "rms_error": 0.00013159413587814203,
+        "fixture": "long",
+        "chunk": 16,
+        "samples": 214485,
+        "max_abs_error": 0.0019520372152328491,
+        "boundary_max_abs_error": 0.0009974166750907898
+      }
+    ]
+  },
+  "observation": {
+    "simple_native_observation_ms": [
+      354,
+      179,
+      192
+    ],
+    "two_source_native_observation_ms": [
+      581,
+      505
+    ],
+    "native_cancel_seconds": 0.033,
+    "native_pid_preserved_on_cancel": true,
+    "test_scope": "Synthetic camera/screen images; not a broad scene or physical portal qualification."
+  },
+  "long_speech": {
+    "segmented_native_gpu": {
+      "native_text_characters": 8375,
+      "native_audio_seconds": 600.966875,
+      "native_audio_frames": 7519,
+      "first_pcm_seconds": 26.21725375699998,
+      "elapsed_seconds": 212.97406722799997,
+      "audio_sha256": "44f28fb7971afd936124ff4c06e6765b54e7ec254fb51bc8bd35a6399e252c9c",
+      "backend": "gpu",
+      "memory_mode": "resident",
+      "text_tokens": 2469
+    },
+    "unsegmented_failure": "A separate 12-minute continuous Talker stress stream reached EOS with valid PCM but unintelligible final speech. The 600.97-second result is not a general speech-quality claim.",
+    "implementation": "src/voice.cpp groups complete phrases near 160 tokens with a 256-token word-boundary fallback. This is implemented in this native module.",
+    "asr_scope": "Two selected 28-second regions around a cache boundary and reply end transcribed successfully. The complete 600-second output was not listening-qualified.",
+    "cache_growth_test": "Predictor GPU: all KV bytes identical and hidden output <1e-5 against preallocated cache at positions 512, 1024, 1299",
+    "phrase_join_test": "10ms overlap, no inserted silence, within-phrase samples unchanged",
+    "cancel_pcm_seconds": 0.078593738,
+    "next_generation_after_cancel": true
+  },
+  "limitations": [
+    "Only Linux x86-64/CUDA/RTX 5090 was GPU-qualified.",
+    "No listening-based, English or broad multilingual qualification.",
+    "Raw formulas degraded speech in one long test.",
+    "No 128K context qualification.",
+    "Input audio is a recorded turn, not continuous full-duplex microphone input.",
+    "Numerical fixtures do not establish general speech quality.",
+    "BF16 CUDA expert multiplication stalled on one input; Q4 passing it does not resolve the BF16 defect."
+  ]
+}

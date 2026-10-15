@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "licensing": "The source owner authorized MIT distribution. See ../LICENSE. Upstream library authorship is retained separately.",
+  "files": [
+    {
+      "file": "reader.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b2/src/omni_talker_probe.cpp",
+      "original_sha256": "f19b98bab82e8509f6e329b0d9524066b12ed810436450675ea2d1834b917a3d",
+      "distributed_sha256": "bf8e55ba02670a0d6588d22fa5bdb78496aad4465460f08ff52925e8e653f644",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "expert.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b4/src/omni_expert_core_embedded.inc",
+      "original_sha256": "a5e4a513b219d644b3da069dfbe71937d4c9ffcd9e13e73dcca3968e9eaf3218",
+      "distributed_sha256": "ae9f2014408a97a2892626a0707bae64207c7e6681273312ea71769b4ab010e9",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "router.h",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b4/src/omni_moe_router.h",
+      "original_sha256": "c77e02aaa022fb2496946b995139bb7bd8877eb1ed54d1835a4ba2fb3dfa6f4f",
+      "distributed_sha256": "6aac2484a782a0c0dbabb02d67e9f31e5a994edfd1f73c7c3b3caf15a2c1aea4",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "attention.h",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b5/src/omni_attention_math.h",
+      "original_sha256": "2746c98bfd4dba768acb02670bc4f87e975a97efcb004ed04d46b611f124f2f0",
+      "distributed_sha256": "4981d09482f5cbe3e1d0454c52bab26da231bf8193a7ca1851741980217633b8",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "talker.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b14k/src/omni_decoder_stack20_feedback_ggml.cpp",
+      "original_sha256": "dd352fae0c3e185f07d794b07fe6ca621c816eb4ded4d6f05f550b15b3e23c7d",
+      "distributed_sha256": "53eab4afb1d0ef58f39d3cc20c802914d3505f45ba5938e68367c42f8736c17a",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "predictor_base.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b11/src/omni_predictor_base_embedded.inc",
+      "original_sha256": "6998caba1a4e5d6da60fd862b86740ebc85145153b2aaf145eeb4746a4f00322",
+      "distributed_sha256": "fe8d1603dac0c372833b8560343d941dd362671687ddc9e40354184e7233a890",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "predictor.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b14l/src/omni_code_predictor_frame1_ggml.cpp",
+      "original_sha256": "fdc2a2b03d606521fdae444e321376dbcfc84d0d4e6fccfffb472acab349c680",
+      "distributed_sha256": "764d06873f660f24bbcf9f934464806d8181c07b7ec4270bebcc5c9c9572dfae",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "projection.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b14a/src/omni_talker_projection_ggml.cpp",
+      "original_sha256": "6af4126be41a0b3bdf5ac268e71056fe0716a681c93a926641e152aaaeb4b68a",
+      "distributed_sha256": "edfc85ddba985759c5befe2948829fa9ed7c9fca3e9fc3263046f51ca3a0dd0e",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "codec_embedding.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b13a/src/omni_code2wav_codec_sequence_ggml.cpp",
+      "original_sha256": "80999ad15188639add0a4df89e9dc08a1c6d944325b88af9a357de558bdf142e",
+      "distributed_sha256": "770cadc04df30f35c1247b126d8812c69f530520da066788209ad5a0b9b17f8e",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "codec_transformer.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b13b/src/omni_code2wav_pretransformer_variable_ggml.cpp",
+      "original_sha256": "135e8e1ad6ab1736f8f9f2eee118e2de1db7f7e9a18a9824e2842323a26080c8",
+      "distributed_sha256": "5773cfe5c1dd40c78a8f498ccb1c487bb23615160d084d268aa49af0f7ba0957",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "codec_upsample.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b13c/src/omni_code2wav_upsample_variable_ggml.cpp",
+      "original_sha256": "a894579bbb32b2705cec332443ad9570c5326be1219fef2a14cdea05ef0f681a",
+      "distributed_sha256": "b9abefa933e44c13cfd6ef456b5969444b0938b2d569ab595db1430a3f77b291",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "codec_stem.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b13d1/src/omni_code2wav_dac_stem_variable_ggml.cpp",
+      "original_sha256": "e58bc0e526a68df4f6b6c4b56100bfba45623f24c024e01a32b03c91b643fae6",
+      "distributed_sha256": "7cb41453937b3329acbc9f8a09fd564a05506373d296354fe855ac82a3b5a974",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    },
+    {
+      "file": "codec_dac.inc",
+      "license": "MIT",
+      "copyright": "2026 Andrei Tolkachev",
+      "origin": "S1B14L v0.5.25 cumulative source archive",
+      "original_path": "loraai_omni_s1b13d2/src/omni_code2wav_dac_cascade0_variable_ggml.cpp",
+      "original_sha256": "61f856f710160fccbf3a062da7c6613e1fc7ea4e82cd6bfd99495895d2bd4c3b",
+      "distributed_sha256": "26988c9026456b73a2ae34eb4762d82f733027f62767f06fe93970f5f3e45587",
+      "modifications": "Reusable native math extracted; local paths and standalone entry points removed; includes normalized. reader.inc additionally supports mixed Q4 tensor sizing; codec_dac.inc supports multiple cascade stages."
+    }
+  ]
+}

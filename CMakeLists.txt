@@ -306,3 +306,12 @@ configure_file(cmake/llama.pc.in
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/llama.pc"
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+# LoraAI native Qwen3 Omni (isolated, opt-in target).
+option(LLAMA_OMNI "Build native Qwen3 Omni speech tools" OFF)
+if(LLAMA_OMNI)
+    if(NOT LLAMA_BUILD_SERVER OR NOT BUILD_SHARED_LIBS)
+        message(FATAL_ERROR "LLAMA_OMNI requires LLAMA_BUILD_SERVER=ON and BUILD_SHARED_LIBS=ON")
+    endif()
+    add_subdirectory(tools/loraai_omni_native)
+endif()
