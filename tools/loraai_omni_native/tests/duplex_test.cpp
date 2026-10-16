@@ -271,5 +271,31 @@ int main() {
     spoken.append(0,text("task"),true,true,J::object(),"",32,"",false,"Checking now.");
     until(spoken,"speech_done");assert(spoken_input["_omni_spoken_text"]=="Checking now.");
     assert(spoken.context(J::object())["messages"].size()==1);spoken.close();
+    // A quoted inference view preserves the exact authoritative dialogue and
+    // rebuilds from its current revision. It is opt-in and local to one input.
+    J quoted_history = J::array({{{"role","system"},{"content","rules"}},
+        {{"role","user"},{"content",text("earlier question")}},
+        {{"role","assistant"},{"content","earlier answer"}}});
+    J view = lora_omni::duplex_history_view(quoted_history,"quoted_text");
+    assert(view.size()==2 && view[0]==quoted_history[0]);
+    assert(J::parse(view[1]["content"].get<std::string>())["dialogue_history"]==J::array({quoted_history[1],quoted_history[2]}));
+    rejects(400,[&]{lora_omni::duplex_history_view(quoted_history,"unknown");});
+    J media=quoted_history; media[1]["content"]=J::array({{{"type","image_url"},{"image_url",{{"url","fixture"}}}}});
+    rejects(400,[&]{lora_omni::duplex_history_view(media,"quoted_text");});
+    J quoted_seen;
+    DuplexSession quoted("quoted",quoted_history,[&](const J & messages,bool,const auto &){
+        quoted_seen=messages;return DuplexReply{"new answer",{}};
+    },[](const auto &,const auto &,const auto & audio,const auto &){audio(Vector(480,.1f));},{});
+    quoted.start();
+    quoted.append(0,text("current"),true,true,J::object(),"current",32,"turn context",true,"","quoted_text");
+    auto qdone=until(quoted,"speech_done");
+    assert(quoted_seen.size()==4 && quoted_seen[0]==quoted_history[0] && quoted_seen[1]==view[1]);
+    assert(quoted_seen[2]["content"]=="turn context" && quoted_seen[3]["content"]==text("current"));
+    auto stored=quoted.context(J::object())["messages"];
+    for(size_t i=0;i<quoted_history.size();++i)assert(stored[i]==quoted_history[i]);
+    quoted.acknowledge(qdone.data["generation_id"].get<std::string>(),480);
+    quoted.append(1,text("next"),true);until(quoted,"speech_done");
+    assert(quoted_seen.size()==6 && quoted_seen[1]==quoted_history[1]);
+    quoted.close();
     std::cout << "duplex overlap, revision rollback, ordering, limits, cancellation, disconnect and grounding: passed\n";
 }

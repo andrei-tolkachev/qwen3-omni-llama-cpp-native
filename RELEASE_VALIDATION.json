@@ -5,7 +5,7 @@
   "platform": "Linux x86-64, RTX 5090 32 GiB, CUDA 13.2; matching retained pinned-upstream CUDA libraries",
   "checks": {
     "cpu_integrated_build": "passed: server, generate, decode, quantize, audio join, visual parser, HTTP security, duplex and voice capture",
-    "native_cpu_regressions": "passed: concurrency, cancellation, lossless fragments, immutable heard prefixes, bounded queues, context ordering and long multimodal capture",
+    "native_cpu_regressions": "passed: concurrency, cancellation, lossless fragments, immutable heard prefixes, bounded queues, context ordering and long multimodal capture; exact optional quoted-history view, original history preservation and text-only validation",
     "http_authentication": "passed: real upstream HTTP middleware and all 10 Omni routes; non-loopback startup without API key rejected",
     "pcm_example_client": "passed: synthetic HTTP/SSE ordering, byte-exact PCM and failure cleanup",
     "upgrade_kit": "applied to fresh pinned upstream; configured and built duplex/capture targets; both regressions passed",
@@ -22,12 +22,12 @@
       "pcm_bit_identical": true,
       "cancellation": {
         "rollback_recomputed": true,
-        "recompute_seconds": 0.16598326800158247,
+        "recompute_seconds": 0.1645782160012459,
         "next_text": "Everything is ready."
       },
       "cancel_after_synthesis": {
         "rollback_recomputed": true,
-        "recompute_seconds": 0.15722748299958766,
+        "recompute_seconds": 0.10897200900217285,
         "next_text": "Everything is ready."
       },
       "adaptive": {
@@ -36,18 +36,19 @@
         "verbatim_continuation": true,
         "turn_context_not_persisted": true,
         "original_history_unchanged": true,
+        "quoted_history_view": true,
         "playback": "immediate consumption ACKs"
       },
       "fragmented_audio": {
         "audio_fragments": 2,
         "overlap": true,
-        "partial_thinker_ms": 115.593546,
-        "final_thinker_ms": 238.102817,
+        "partial_thinker_ms": 106.017033,
+        "final_thinker_ms": 227.714542,
         "text": "\u041f\u0440\u0438\u0432\u0435\u0442!"
       }
     },
     "scheduling": {
-      "batches": 2,
+      "batches": 3,
       "pairs_per_batch": 3,
       "serial_speech_ms": [
         3057.539183,
@@ -55,7 +56,10 @@
         5294.104661,
         4772.717112,
         4574.777278,
-        4945.19982
+        4945.19982,
+        3974.188808,
+        2998.52748,
+        2919.513215
       ],
       "concurrent_speech_ms": [
         3142.528179,
@@ -63,15 +67,18 @@
         5274.735847,
         4910.062629,
         3751.805825,
-        3657.603245
+        3657.603245,
+        4709.631063,
+        3379.771357,
+        5295.763498
       ],
-      "serial_mean_ms": 4554.200038666667,
-      "concurrent_mean_ms": 4333.086515333333,
-      "relative_mean_percent": -4.855156151596473,
+      "serial_mean_ms": 4135.269970555555,
+      "concurrent_mean_ms": 4375.965001111111,
+      "relative_mean_percent": 5.820539705252159,
       "samples_per_response": 494805,
-      "all_twelve_pcm_sha256": "c53affd00351fe3660cc69cd084e0a0b65b0cf0bd360fbef02bc6b9d5462ae41",
-      "all_twelve_pcm_bit_identical": true,
-      "note": "All completed pairs from two batches are included. Short fixed English passage, seed 42, 65K context allocation. Synthetic consumed-PCM ACKs; not a hardware playback or broad quality benchmark. Initial added adaptive test client acknowledged a boundary before its PCM tail; corrected client passed the full suite."
+      "all_eighteen_pcm_sha256": "c53affd00351fe3660cc69cd084e0a0b65b0cf0bd360fbef02bc6b9d5462ae41",
+      "all_eighteen_pcm_bit_identical": true,
+      "note": "All completed pairs are included; the final batch also tests the new optional quoted-history view. Short fixed English passage, seed 42, 65K context allocation. Consumed-PCM ACKs, not device playback or broad quality qualification. An initially added adaptive test client acknowledged a phrase boundary before its PCM tail; the corrected client passed both subsequent full suites."
     },
     "secret_scan": {
       "tool": "Gitleaks 8.30.1",

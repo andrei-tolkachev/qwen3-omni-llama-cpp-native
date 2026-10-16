@@ -249,7 +249,7 @@ def adaptive_checks(url):
     with Session(url, history, adaptive_dialogue=True) as s:
         s.request('/input', {'session_id':s.id, 'sequence':0, 'final':True,
             'content':text('Say the required color only.'),
-            'context':'The required color for this turn is violet.'})
+            'context':'The required color for this turn is violet.', 'history_mode':'quoted_text'})
         started=s.wait('speech_started'); assert started['text'].strip().lower().strip('.')=='violet',started
         done=s.wait('speech_done');s.ack(started['generation_id'],done['samples'])
         after=s.request('/context',{'session_id':s.id})['messages']
@@ -257,7 +257,7 @@ def adaptive_checks(url):
         assert 'required color for this turn' not in json.dumps(after)
     return {'heard_prefixes':prefixes, 'query_during_synthesis':True,
             'verbatim_continuation':True, 'turn_context_not_persisted':True,
-            'original_history_unchanged':True, 'playback':'immediate consumption ACKs'}
+            'original_history_unchanged':True, 'quoted_history_view':True, 'playback':'immediate consumption ACKs'}
 
 
 def main():

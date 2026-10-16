@@ -20,6 +20,8 @@ struct DuplexReply {
     std::vector<CapturedRow> conditioning;
     DuplexJson pointers = DuplexJson::array(), actions = DuplexJson::array();
 };
+// Derive an inference view without modifying the authoritative conversation.
+DuplexJson duplex_history_view(const DuplexJson & history, const std::string & mode);
 
 // One Thinker owner and one speech owner. Neither calls the other while holding
 // the dialogue mutex. GPU contexts, KV and conditioning are never shared mutable
@@ -48,7 +50,8 @@ public:
     void start();
     DuplexJson append(uint64_t sequence, const DuplexJson & content, bool final,
                       bool replace = false, const DuplexJson & visual = DuplexJson::object(), const std::string & history_text = "", int max_tokens = -1,
-                      const std::string & context = "", bool record_input = true, const std::string & spoken_text = "");
+                      const std::string & context = "", bool record_input = true, const std::string & spoken_text = "",
+                      const std::string & history_mode = "messages");
     DuplexJson query(const DuplexJson & request, const Stop & disconnected);
     DuplexJson context(const DuplexJson & request);
     DuplexJson interrupt_input(int64_t sequence, const DuplexJson & content, bool record_input = true);
@@ -69,6 +72,7 @@ private:
         std::string history_text;
         std::string context;
         std::string spoken_text;
+        std::string history_mode = "messages";
         int max_tokens = -1;
     };
     struct QueryJob {

@@ -86,6 +86,29 @@ void append_content(DuplexJson & target, const DuplexJson & content) {
     }
 }
 }
+DuplexJson duplex_history_view(const DuplexJson & history, const std::string & mode) {
+    if (mode == "messages") return history;
+    if (mode != "quoted_text") throw DuplexError(400, "duplex_invalid_history_mode");
+    DuplexJson result = DuplexJson::array(), dialogue = DuplexJson::array();
+    for (const auto & message : history) {
+        const auto role = message.value("role", std::string{});
+        if (dialogue.empty() && role == "system") { result.push_back(message); continue; }
+        if ((role != "user" && role != "assistant") || !message.contains("content"))
+            throw DuplexError(400, "duplex_quoted_history_requires_text");
+        const auto & content = message["content"];
+        if (!content.is_string()) {
+            if (!content.is_array()) throw DuplexError(400, "duplex_quoted_history_requires_text");
+            for (const auto & block : content)
+                if (!block.is_object() || block.value("type", std::string{}) != "text" ||
+                    !block.contains("text") || !block["text"].is_string())
+                    throw DuplexError(400, "duplex_quoted_history_requires_text");
+        }
+        dialogue.push_back(message);
+    }
+    if (!dialogue.empty()) result.push_back({{"role", "system"},
+        {"content", DuplexJson{{"dialogue_history", dialogue}}.dump()}});
+    return result;
+}
 DuplexSession::DuplexSession(std::string id, DuplexJson history, Think think, Speak speak, Limits limits, Query query):
     id(std::move(id)), think(std::move(think)), speak(std::move(speak)), query_fn(std::move(query)), limits(limits), history(std::move(history)) {
     if (!this->history.is_array() || this->history.dump().size() > limits.history_bytes)
@@ -94,13 +117,13 @@ DuplexSession::DuplexSession(std::string id, DuplexJson history, Think think, Sp
 DuplexSession::~DuplexSession() { close(); }
 void DuplexSession::start() {
     emit("session", {{"session_id", id}, {"protocol", 1}, {"next_sequence", 0}, {"revision", 0}, {"playback_ack_required", true},
-        {"capabilities", {"query", "replace_input", "visual", "context", "interrupt_input", "playback_final", "input_context", "adaptive_dialogue", "committed_prefix", "verbatim_speech"}}});
+        {"capabilities", {"query", "replace_input", "visual", "context", "interrupt_input", "playback_final", "input_context", "adaptive_dialogue", "committed_prefix", "verbatim_speech", "quoted_history"}}});
     try {
         thinker = std::thread([this] { think_loop(); });
         talker = std::thread([this] { speech_loop(); });
     } catch (...) { close(); throw; }
 }
-DuplexJson DuplexSession::append(uint64_t sequence, const DuplexJson & content, bool final, bool replace, const DuplexJson & visual, const std::string & history_text, int max_tokens, const std::string & context, bool record_input, const std::string & spoken_text) {
+DuplexJson DuplexSession::append(uint64_t sequence, const DuplexJson & content, bool final, bool replace, const DuplexJson & visual, const std::string & history_text, int max_tokens, const std::string & context, bool record_input, const std::string & spoken_text, const std::string & history_mode) {
     if (!spoken_text.empty() && (!final || record_input || spoken_text.size() > 1024 || spoken_text.find_first_of("\r\n\t") != std::string::npos))
         throw DuplexError(400, "duplex_invalid_spoken_text");
     if (max_tokens != -1 && (max_tokens < 1 || max_tokens > 65536)) throw DuplexError(400, "duplex_token_limit");
@@ -129,6 +152,7 @@ DuplexJson DuplexSession::append(uint64_t sequence, const DuplexJson & content, 
     if (closed) throw DuplexError(410, "duplex_session_closed");
     if (sequence != expected_sequence) throw DuplexError(409, "duplex_sequence_conflict");
     if (input && input->final) throw DuplexError(429, "duplex_input_backpressure");
+    if (history_mode != "messages") duplex_history_view(history, history_mode);
     const size_t old_bytes = input && !replace ? input->bytes : 0;
     if (bytes > limits.input_bytes - old_bytes || content.size() > limits.fragments)
         throw DuplexError(413, "duplex_input_limit");
@@ -146,6 +170,7 @@ DuplexJson DuplexSession::append(uint64_t sequence, const DuplexJson & content, 
     input->history_text = history_text;
     input->record_input = record_input;
     input->spoken_text = spoken_text;
+    input->history_mode = history_mode;
     if (replace || !context.empty()) input->context = context;
     input->max_tokens = max_tokens;
     input->sequence = sequence; input->version = ++expected_sequence; input->final = final;
@@ -286,7 +311,7 @@ void DuplexSession::think_loop() {
                 next_partial = std::chrono::steady_clock::now() + limits.partial_interval;
                 version = input->version; rev = revision; seq = input->sequence;
                 fence = epoch; final = input->final;
-                messages = history;
+                messages = duplex_history_view(history, input->history_mode);
                 // Ephemeral grounding belongs to Thinker's context, not to the
                 // speaker's utterance. Keep it out of Talker conditioning and
                 // committed dialogue. Place turn-local context immediately before

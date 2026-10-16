@@ -483,7 +483,8 @@ ws ::= [ \t]*
             auto response = std::make_unique<server_http_res>();
             response->data = session_for(body)->append(body.at("sequence").get<uint64_t>(), body.at("content"), body.at("final").get<bool>(),
                 body.value("replace", false), body.value("visual", DJson::object()), body.value("history_text", std::string{}), body.value("max_tokens", -1),
-                body.value("context", std::string{}), body.value("record_input", true), body.value("spoken_text", std::string{})).dump();
+                body.value("context", std::string{}), body.value("record_input", true), body.value("spoken_text", std::string{}),
+                body.value("history_mode", std::string("messages"))).dump();
             return response;
         }));
         http.post("/v1/omni/duplex/context", safe([&](const server_http_req & request) -> server_http_res_ptr {

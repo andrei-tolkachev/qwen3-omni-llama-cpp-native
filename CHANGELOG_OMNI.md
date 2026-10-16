@@ -6,6 +6,7 @@
 - Adaptive append-only heard history, phrase playback acknowledgements, cancellation after synthesis and recomputation of input dependent on unheard output.
 - Auxiliary Thinker queries, final-input replacement, protected context compare-and-swap and exact-text speech continuations.
 - Speech-first memory placement, allocation-driven paging, bounded projection workspaces, shorter phrases, synthesis pacing and exact per-generation Talker KV-prefix reuse.
+- Optional quoted-text history view for a single inference, rebuilt on revision changes without rewriting the stored conversation.
 - Keep turn-local context immediately before the current input without mutating committed history or adding retrieval text to speech conditioning.
 - Remove obsolete 3787/4096-row conditioning guards; preserve the loaded context limits and multimodal rows.
 - Native concurrency, capture, HTTP authentication and numerical regressions; matching full-source/upgrade-kit archives and updated English/Russian documentation.
