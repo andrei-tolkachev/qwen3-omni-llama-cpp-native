@@ -1,40 +1,90 @@
 {
-  "version": "0.1.1",
+  "version": "0.2.0",
   "prepared_on": "2026-10-16",
-  "scope": "Standalone native Omni extension and pinned upstream source; no model weights.",
+  "scope": "Standalone native server and pinned upstream source. No model weights or application components.",
+  "platform": "Linux x86-64, RTX 5090 32 GiB, CUDA 13.2; matching retained pinned-upstream CUDA libraries",
   "checks": {
-    "cpu_integrated_build": "passed: omni-server, omni-generate, omni-decode, omni-quantize, audio-join, visual-reply and server-security targets",
-    "cpu_audio_join": "passed: 10 ms overlap, no inserted silence, unchanged within-phrase samples",
-    "cpu_visual_reply": "passed: UTF-8 splits, pointer binding, malformed/truncated suffixes",
-    "http_authentication": "passed: actual upstream HTTP middleware on ephemeral loopback; both voice and cancel reject absent/wrong key with 401 and accept the test key",
-    "non_loopback_startup": "passed: 0.0.0.0 without key refuses before model loading; unit cases include IPv4, IPv6, hostname and empty keys",
-    "pcm_example_client": "passed: synthetic HTTP/SSE fixture; byte-exact PCM, stale generation rejected, gap/EOF/error cancel and remove partial output",
-    "standalone_build_source_guard": "passed: incompatible library-source directory rejected by CMake",
-    "cuda_module_build": "passed against retained matching pinned upstream CUDA shared libraries with the precision patch; not a fresh CUDA rebuild of all upstream libraries",
+    "cpu_integrated_build": "passed: server, generate, decode, quantize, audio join, visual parser, HTTP security, duplex and voice capture",
+    "native_cpu_regressions": "passed: concurrency, cancellation, lossless fragments, immutable heard prefixes, bounded queues, context ordering and long multimodal capture",
+    "http_authentication": "passed: real upstream HTTP middleware and all 10 Omni routes; non-loopback startup without API key rejected",
+    "pcm_example_client": "passed: synthetic HTTP/SSE ordering, byte-exact PCM and failure cleanup",
+    "upgrade_kit": "applied to fresh pinned upstream; configured and built duplex/capture targets; both regressions passed",
+    "cuda_module_build": "passed; module rebuilt from public source and linked to retained matching upstream CUDA shared libraries, not a fresh rebuild of every CUDA dependency",
     "cuda_numerical": {
       "ok": true,
       "exact_recurrent_frames": 2,
       "decoder_samples": 12885,
       "decoder_max_abs_error": 7.972121238708496e-07,
       "threshold": 0.0001,
-      "admission_budget_MiB": 4096,
-      "platform": "Linux x86-64, CUDA 13.2, RTX 5090"
+      "admission_budget_MiB": 4096
     },
-    "small_budget_negative_probe": "1400 MiB admitted the recurrent-frame test but rejected decoder workspace explicitly; this is not a supported total VRAM minimum",
-    "vendor_original_hashes": "all 13 original source hashes verified; every distributed vendor source has MIT identification and per-file provenance",
-    "upstream_root_license": "byte-identical to pinned upstream",
+    "cuda_session": {
+      "pcm_bit_identical": true,
+      "cancellation": {
+        "rollback_recomputed": true,
+        "recompute_seconds": 0.16598326800158247,
+        "next_text": "Everything is ready."
+      },
+      "cancel_after_synthesis": {
+        "rollback_recomputed": true,
+        "recompute_seconds": 0.15722748299958766,
+        "next_text": "Everything is ready."
+      },
+      "adaptive": {
+        "heard_prefixes": 4,
+        "query_during_synthesis": true,
+        "verbatim_continuation": true,
+        "turn_context_not_persisted": true,
+        "original_history_unchanged": true,
+        "playback": "immediate consumption ACKs"
+      },
+      "fragmented_audio": {
+        "audio_fragments": 2,
+        "overlap": true,
+        "partial_thinker_ms": 115.593546,
+        "final_thinker_ms": 238.102817,
+        "text": "\u041f\u0440\u0438\u0432\u0435\u0442!"
+      }
+    },
+    "scheduling": {
+      "batches": 2,
+      "pairs_per_batch": 3,
+      "serial_speech_ms": [
+        3057.539183,
+        4680.862178,
+        5294.104661,
+        4772.717112,
+        4574.777278,
+        4945.19982
+      ],
+      "concurrent_speech_ms": [
+        3142.528179,
+        5261.783367,
+        5274.735847,
+        4910.062629,
+        3751.805825,
+        3657.603245
+      ],
+      "serial_mean_ms": 4554.200038666667,
+      "concurrent_mean_ms": 4333.086515333333,
+      "relative_mean_percent": -4.855156151596473,
+      "samples_per_response": 494805,
+      "all_twelve_pcm_sha256": "c53affd00351fe3660cc69cd084e0a0b65b0cf0bd360fbef02bc6b9d5462ae41",
+      "all_twelve_pcm_bit_identical": true,
+      "note": "All completed pairs from two batches are included. Short fixed English passage, seed 42, 65K context allocation. Synthetic consumed-PCM ACKs; not a hardware playback or broad quality benchmark. Initial added adaptive test client acknowledged a boundary before its PCM tail; corrected client passed the full suite."
+    },
     "secret_scan": {
       "tool": "Gitleaks 8.30.1",
       "default_rules": true,
-      "initial_tree_and_single_commit_history_findings": 47,
-      "reviewed_false_positives": "43 SHA-256 manifest matches, 1 synthetic PNG, 1 placeholder curl key, 2 xxhash intrinsic names",
-      "narrow_allowlists": ".gitleaks.toml",
-      "clean_tree_unresolved_findings": 0
-    }
+      "narrow_reviewed_allowlists": ".gitleaks.toml",
+      "unresolved_findings": 0
+    },
+    "source_scope": "Allowlisted native module; full upstream history already public. Native source and documentation reviewed separately from secret scanning."
   },
   "limitations": [
-    "No new long-form voice/listening benchmark in release preparation. Historical GPU evidence is in tools/loraai_omni_native/VALIDATION.json.",
-    "No GPU server end-to-end rerun or additional platform qualification in release preparation.",
-    "Secret scanning does not prove absence of all sensitive information. Source scope and added documentation were reviewed separately."
+    "Native inference/session primitives only; conversational policy, capture, echo cancellation and playback belong to callers.",
+    "Measurements do not prove unchanged speed on every input or GPU; short-input concurrent tests do not qualify a near-full 65K multimodal context or 128K.",
+    "Smaller adaptive phrases can change prosody and seeded PCM relative to legacy segmentation; model precision was not reduced.",
+    "No broad perceptual, multilingual, Windows or other-GPU qualification. Historical BF16 input-specific stall and CUDA Xid 11 remain disclosed in the native validation files."
   ]
 }

@@ -26,5 +26,6 @@ public:
         tail.assign(joined.begin() + count, joined.end());
     }
     void finish() { if (!tail.empty()) emit(tail); tail.clear(); }
+    size_t pending_samples() const { return tail.size(); }
 };
 }

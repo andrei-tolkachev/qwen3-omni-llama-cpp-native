@@ -1,0 +1,188 @@
+{
+  "date": "2026-10-16",
+  "upstream_revision": "86632248188c106d749fad34a1dcd237c95863d4",
+  "platform": "Linux x86-64, CUDA, NVIDIA RTX 5090, 32 GiB",
+  "models": {
+    "thinker": "Qwen3-Omni-30B-A3B-Instruct-Q4_K_M",
+    "projector": "matching BF16",
+    "talker": "mixed Q4",
+    "predictor": "BF16",
+    "code2wav": "BF16 weights expanded to F32 on GPU"
+  },
+  "context_capacity": 65536,
+  "benchmark": {
+    "note": "Historical scheduling candidate, ten serial/concurrent pairs after warmup. Short prompts in an allocated 65K context, not a 65K-token prompt. All timings retained; GPU timings fluctuate.",
+    "serial_speech_ms": [
+      2994.592369,
+      5207.473565,
+      5083.069916,
+      5255.648113,
+      5067.351751,
+      5060.84353,
+      3197.124017,
+      4964.492812,
+      5166.084504,
+      4182.199851
+    ],
+    "concurrent_speech_ms": [
+      5308.627272,
+      5361.434455,
+      4062.926788,
+      5067.710949,
+      5180.306912,
+      5097.046905,
+      4411.527968,
+      5159.734652,
+      4843.256237,
+      5113.907767
+    ],
+    "serial_mean_ms": 4617.8880428,
+    "concurrent_mean_ms": 4960.6479905,
+    "relative_mean_percent": 7.422439533466285,
+    "serial_median_ms": 5064.0976405,
+    "concurrent_median_ms": 5105.477336,
+    "relative_median_percent": 0.8171188321699496,
+    "audio_samples": 494805,
+    "audio_seconds": 20.616875,
+    "pcm_bit_identical_across_all_twenty_runs": true,
+    "pcm_sha256": "c53affd00351fe3660cc69cd084e0a0b65b0cf0bd360fbef02bc6b9d5462ae41",
+    "ongoing_audio_after_new_input_processed": true,
+    "concurrent_mean_realtime_factor": 0.2406110523782096
+  },
+  "cancellation": {
+    "rollback_recomputed": true,
+    "recompute_seconds": 0.10448979400007374,
+    "next_text": "Everything is ready."
+  },
+  "cancel_after_synthesis": {
+    "rollback_recomputed": true,
+    "recompute_seconds": 0.09757462400011718,
+    "next_text": "Everything is ready."
+  },
+  "fragmented_audio": {
+    "audio_fragments": 2,
+    "overlap": true,
+    "partial_thinker_ms": 105.592103,
+    "final_thinker_ms": 248.987143,
+    "text": "\u041f\u0440\u0438\u0432\u0435\u0442!"
+  },
+  "memory": {
+    "sampled_total_gpu_used_mib_at_65k": 30530,
+    "staged_unloads": 0,
+    "forced_paging": {
+      "resident_weight_budget_mib": 3600,
+      "thinker_context": 8192,
+      "decoder_mode": "layer paging",
+      "thinker_kept_loaded": true,
+      "overlap": true,
+      "same_pcm_sha256_as_resident": true,
+      "speech_ms": 12345.549455,
+      "realtime_factor": 0.5988079888440901,
+      "note": "Accounting-budget test on the same 32 GiB GPU; not qualification of a 3.6 GiB GPU."
+    }
+  },
+  "numerical": {
+    "ok": true,
+    "exact_recurrent_frames": 2,
+    "decoder_samples": 12885,
+    "decoder_max_abs_error": 7.972121238708496e-07
+  },
+  "kv_growth": "passed: all KV bytes preserved at positions 512, 1024 and 1299 against preallocated reference",
+  "builds": {
+    "cpu": "integrated full-source CMake build passed",
+    "cuda": "isolated module linked to matching previously qualified upstream/CUDA libraries; native numerical and model tests passed"
+  },
+  "regressions": {
+    "duplex_state_machine": "passed (overlap, rollback, playback acknowledgements, completed-synthesis interruption, 100 tiny fragments, PCM joining, limits, cancellation, disconnected/full output queue, worker errors)",
+    "authentication": "all 7 Omni routes reject missing/wrong keys and accept the test key",
+    "legacy_voice": "3 multi-turn audio requests, forced empty output error and recovery passed",
+    "legacy_client": "PCM ordering, stale generations, missing EOF and error cleanup passed",
+    "phrase_join_and_visual_parser": "passed",
+    "thread_sanitizer": "passed: final duplex state-machine/audio tests instrumented with GCC ThreadSanitizer; no reported races",
+    "shutdown_stress": {
+      "runs": 200,
+      "passed": true,
+      "seconds": 32.96363890700013
+    },
+    "final_source_model_suite": {
+      "pcm_bit_identical": true,
+      "cancellation": {
+        "rollback_recomputed": true,
+        "recompute_seconds": 0.10448979400007374,
+        "next_text": "Everything is ready."
+      },
+      "cancel_after_synthesis": {
+        "rollback_recomputed": true,
+        "recompute_seconds": 0.09757462400011718,
+        "next_text": "Everything is ready."
+      },
+      "fragmented_audio": {
+        "audio_fragments": 2,
+        "overlap": true,
+        "partial_thinker_ms": 105.592103,
+        "final_thinker_ms": 248.987143,
+        "text": "\u041f\u0440\u0438\u0432\u0435\u0442!"
+      }
+    }
+  },
+  "scope": [
+    "One native session, one Thinker lane and one speech lane.",
+    "Playback positions were simulated by test clients; physical microphone/speaker echo cancellation and device playback are not qualified.",
+    "Bit-identical PCM proves scheduler/paging preservation for the tested seeded fixture, not broad perceptual speech quality.",
+    "Other GPUs, backends, multiple speech GPUs, near-full concurrent multimodal prompts and physical low-VRAM devices still require qualification.",
+    "The cumulative audio frontend is upstream mtmd; partial snapshots are re-encoded."
+  ],
+  "upgrade_kit": {
+    "applied_to_clean_pinned_upstream": true,
+    "cmake_configured": true,
+    "fresh_server_and_duplex_test_build_passed": true,
+    "module_matches_integrated_source": true
+  },
+  "cuda_incident": {
+    "nvidia_driver": "595.99.02",
+    "xid": 11,
+    "observed_once": true,
+    "phase": "serial speech generation in a final smoke run, before concurrent input",
+    "process_aborted": true,
+    "root_cause": "unconfirmed",
+    "nvidia_reference": "https://docs.nvidia.com/deploy/xid-errors/analyzing-xid-catalog.html",
+    "not_claimed_fixed": true,
+    "compute_sanitizer": {
+      "completed_both_flows": true,
+      "memory_access_error_lines": [],
+      "unexpected_api_diagnostics": [],
+      "initial_concurrent_diagnostic_timeout_seconds": 180,
+      "instrumented_retry_completed": true,
+      "api_status_910": "The existing upstream cudaGraphExecUpdate fallback reports/recoverably clears status 910 and re-instantiates its graph (ggml-cuda.cu). These expected API diagnostics are distinct from invalid memory accesses."
+    },
+    "subsequent_native_stress": {
+      "cases": 20,
+      "all_pcm_identical": true,
+      "all_completed": true
+    },
+    "new_xid_events_after_incident": 0
+  },
+  "preliminary_benchmark": {
+    "note": "Short prompts in an allocated 65K context, not a 65K-token prompt. Three serial/concurrent pairs after warmup; GPU timings fluctuate.",
+    "serial_speech_ms": [
+      5312.694781,
+      3151.855283,
+      5083.420768
+    ],
+    "concurrent_speech_ms": [
+      5333.318515,
+      3428.68422,
+      4455.283631
+    ],
+    "serial_mean_ms": 4515.990277333333,
+    "concurrent_mean_ms": 4405.762122,
+    "relative_mean_percent": -2.4408412898183296,
+    "audio_samples": 494805,
+    "audio_seconds": 20.616875,
+    "pcm_bit_identical_across_all_six_runs": true,
+    "pcm_sha256": "c53affd00351fe3660cc69cd084e0a0b65b0cf0bd360fbef02bc6b9d5462ae41",
+    "ongoing_audio_after_new_input_processed": true,
+    "speech_weight_loads_in_benchmark_server": 3
+  },
+  "qualification_scope": "Historical native scheduling candidate before subsequent adaptive-mode changes. Current release preparation is documented in root RELEASE_VALIDATION.json."
+}

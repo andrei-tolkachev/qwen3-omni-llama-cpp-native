@@ -34,7 +34,10 @@ int main() {
     server_http_context http;
     assert(http.init(params));
     int called = 0;
-    for (auto path : {"/v1/omni/voice", "/v1/omni/cancel"}) {
+    const std::vector<std::string> paths = {"/v1/omni/voice", "/v1/omni/cancel", "/v1/omni/duplex",
+        "/v1/omni/duplex/input", "/v1/omni/duplex/cancel", "/v1/omni/duplex/close", "/v1/omni/duplex/ack",
+        "/v1/omni/duplex/context", "/v1/omni/duplex/query", "/v1/omni/duplex/interrupt-input"};
+    for (const auto & path : paths) {
         http.post(path, [&](const server_http_req &) {
             ++called;
             auto response = std::make_unique<server_http_res>();
@@ -46,7 +49,7 @@ int main() {
     assert(http.start());
     httplib::Client client("127.0.0.1", http.port);
     client.set_connection_timeout(5);
-    for (auto path : {"/v1/omni/voice", "/v1/omni/cancel"}) {
+    for (const auto & path : paths) {
         auto missing = client.Post(path, "{}", "application/json");
         assert(missing && missing->status == 401);
         auto wrong = client.Post(path, {{"Authorization", "Bearer wrong-test-key"}}, "{}", "application/json");
@@ -56,5 +59,5 @@ int main() {
     }
     http.stop();
     http.thread.join();
-    assert(called == 2);
+    assert(called == int(paths.size()));
 }

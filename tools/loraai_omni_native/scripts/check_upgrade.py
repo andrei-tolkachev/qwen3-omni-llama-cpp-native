@@ -5,6 +5,11 @@ from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('--models',type=Path,required=True);p.add_argument('--build',type=Path,default=root/'build');a=p.parse_args()
 f=root/'tests/fixtures';models=a.models/'omni-experimental'
+for name in ('omni-duplex-test','omni-voice-capture-test'):
+ test=a.build/name
+ if not test.is_file():
+  raise SystemExit('Build '+name+' with the selected llama checkout before qualification')
+ subprocess.run([str(test)],check=True)
 with tempfile.TemporaryDirectory(prefix='lora-omni-upgrade-') as temporary:
  out=Path(temporary)
  subprocess.run([str(a.build/'omni-generate'),'--talker',str(models/'talker-experts-packed-bf16-staging.gguf'),'--predictor',str(models/'code-predictor-staging-bf16.gguf'),'--prefill',str(f/'prefill.f32'),'--trailing',str(f/'trailing.f32'),'--pad',str(f/'pad.f32'),'--max-frames','2','--out',str(out/'codes.q3oc')],check=True)

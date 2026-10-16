@@ -20,11 +20,13 @@ jobs:
       - name: Configure CPU-only compile (not GPU qualification)
         run: cmake -S . -B build-omni-ci -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_OMNI=ON -DGGML_CUDA=OFF -DLLAMA_CURL=OFF
       - name: Compile native integration and fixture tests
-        run: cmake --build build-omni-ci --target omni-server omni-generate omni-decode omni-quantize omni-audio-join-test omni-visual-reply-test omni-server-security-test -j2
+        run: cmake --build build-omni-ci --target omni-server omni-generate omni-decode omni-quantize omni-audio-join-test omni-visual-reply-test omni-server-security-test omni-duplex-test omni-voice-capture-test -j2
       - name: Run stand-alone C++ tests
         run: |
           ./build-omni-ci/bin/omni-audio-join-test
           ./build-omni-ci/bin/omni-visual-reply-test
           ./build-omni-ci/bin/omni-server-security-test
+          ./build-omni-ci/bin/omni-duplex-test
+          ./build-omni-ci/bin/omni-voice-capture-test
       - name: Exercise protocol-2 example client without model weights
         run: python3 tools/loraai_omni_native/tests/check_voice_client.py

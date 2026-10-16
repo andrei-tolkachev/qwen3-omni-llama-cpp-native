@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-16",
+  "upstream_revision": "86632248188c106d749fad34a1dcd237c95863d4",
+  "platform": "Linux x86-64, RTX 5090 32 GiB, CUDA; existing model quantizations unchanged",
+  "capabilities": [
+    "adaptive_dialogue",
+    "committed_prefix",
+    "verbatim_speech"
+  ],
+  "native_checks": {
+    "state_machine": "passed including immutable heard prefixes, non-starved partials, pacing, cancellation, internal continuations, verbatim input bounds",
+    "integrated_upgrade": "apply_to_llama --replace, CMake omni-server/duplex/voice-capture build and both tests passed",
+    "gpu_kv_rewind": "hidden states exactly equal to fresh prefill after cache growth; invalid future position rejected",
+    "cpu_numerical_reference": {
+      "exact_recurrent_frames": 2,
+      "decoder_samples": 12885,
+      "decoder_max_abs_error": 5.736947059631348e-07
+    }
+  },
+  "benchmark": {
+    "note": "Historical single fixed Russian passage, seed 42, immediate consumed-PCM ACKs: compute throughput, not hardware playback. Not a general quality/performance guarantee; not a fresh public-source benchmark.",
+    "runs": [
+      {
+        "adaptive": false,
+        "overlap": false,
+        "thinker_seconds": 0.708,
+        "first_pcm_seconds": 1.79,
+        "total_seconds": 9.221,
+        "audio_seconds": 32.824,
+        "speech_ms": 8497.94442,
+        "chunks": 28,
+        "boundaries": [
+          28.536875,
+          32.82375
+        ]
+      },
+      {
+        "adaptive": true,
+        "overlap": false,
+        "thinker_seconds": 0.724,
+        "first_pcm_seconds": 1.876,
+        "total_seconds": 6.76,
+        "audio_seconds": 32.545,
+        "speech_ms": 6021.022987,
+        "chunks": 31,
+        "boundaries": [
+          2.616875,
+          7.06375,
+          12.630625,
+          16.6775,
+          20.804375,
+          24.29125,
+          27.538125,
+          32.545
+        ]
+      },
+      {
+        "adaptive": true,
+        "overlap": true,
+        "thinker_seconds": 0.721,
+        "first_pcm_seconds": 1.763,
+        "total_seconds": 8.322,
+        "audio_seconds": 32.545,
+        "speech_ms": 7587.804857,
+        "chunks": 31,
+        "boundaries": [
+          2.616875,
+          7.06375,
+          12.630625,
+          16.6775,
+          20.804375,
+          24.29125,
+          27.538125,
+          32.545
+        ],
+        "concurrent_query": "completed"
+      }
+    ]
+  },
+  "memory": {
+    "peak_mib": 29725,
+    "total_mib": 32607,
+    "samples": 1500,
+    "sampling_seconds": 0.5,
+    "note": "Short-context multimodal development workloads; not a near-full 65K context stress test."
+  },
+  "version": "0.2.0",
+  "scope": "Historical native adaptive-mode measurements; public-source build and tests are documented separately in root RELEASE_VALIDATION.json.",
+  "limits": [
+    "Automatic revisions wait for an available phrase boundary; no word-level forced alignment or zero-gap speech is claimed.",
+    "Manual hang-up can leave a partial phrase uncommitted.",
+    "VRAM qualification uses short multimodal contexts in a 65K allocation, not a full 65K concurrent stress test.",
+    "Smaller phrase segmentation can alter prosody and seeded PCM; numerical model precision was not reduced.",
+    "Physical microphone/speaker echo behavior and broad perceptual quality are not qualified."
+  ]
+}

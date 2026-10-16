@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <stdexcept>
 namespace lora_omni {
 struct DeviceDecoderTest {
     static void run(const std::string & path) {
@@ -28,6 +29,19 @@ struct DeviceDecoderTest {
                 std::fflush(stdout);
             }
         }
+        growing.rewind(512); reference.rewind(512);
+        for(int i=512;i<520;++i) {
+            Vector value(1024,.03f);
+            const auto a=growing.step(value), b=reference.step(value);
+            assert(a==b);
+        }
+        const auto expected=growing.step(Vector(1024,.07f));
+        growing.rewind(520);
+        const auto repeated=growing.step(Vector(1024,.07f));
+        assert(expected==repeated);
+        try{growing.rewind(522);assert(false);}catch(const std::runtime_error&){}
+        std::puts("PASS: rewound suffix reproduces identical hidden states; future position rejected");
+
     }
 };
 }

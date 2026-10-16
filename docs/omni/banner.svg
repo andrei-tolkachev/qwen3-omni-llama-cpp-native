@@ -4,7 +4,7 @@
 <g fill="none" stroke="#fff" stroke-opacity=".045"><path d="M0 90H1280M0 180H1280M0 270H1280M160 0V360M320 0V360M480 0V360M640 0V360M800 0V360M960 0V360M1120 0V360"/></g>
 <text x="64" y="80" fill="#83ddd9" font-family="sans-serif" font-size="17" letter-spacing="3">INDEPENDENT EXTENSION FOR LLAMA.CPP</text>
 <text x="60" y="161" fill="#f3f5ff" font-family="sans-serif" font-size="64" font-weight="700">Qwen3-Omni</text>
-<text x="64" y="213" fill="#d1d7ec" font-family="sans-serif" font-size="28">Native speech. Streamed on your GPU.</text>
-<text x="64" y="291" fill="#a4afcc" font-family="sans-serif" font-size="19">C++ / GGML   ·   Mixed Q4   ·   PCM streaming   ·   Cancellation</text>
+<text x="64" y="213" fill="#d1d7ec" font-family="sans-serif" font-size="28">True Full Duplex. Native GPU speech.</text>
+<text x="64" y="291" fill="#a4afcc" font-family="sans-serif" font-size="19">Thinker + Talker   ·   Concurrent input / output   ·   Mixed Q4</text>
 <g stroke="url(#wave)" stroke-width="10" stroke-linecap="round"><path d="M878 158V202M902 139V221M926 108V252M950 142V218M974 74V286M998 119V241M1022 95V265M1046 132V228M1070 58V302M1094 105V255M1118 133V227M1142 152V208M1166 167V193"/></g>
 </svg>

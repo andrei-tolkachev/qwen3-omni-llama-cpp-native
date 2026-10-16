@@ -241,5 +241,6 @@
     "Input audio is a recorded turn, not continuous full-duplex microphone input.",
     "Numerical fixtures do not establish general speech quality.",
     "BF16 CUDA expert multiplication stalled on one input; Q4 passing it does not resolve the BF16 defect."
-  ]
+  ],
+  "duplex_update": "See DUPLEX_VALIDATION.json and DUPLEX.md for the 2026-10-16 opt-in session API. Historical turn-based measurements below are retained."
 }

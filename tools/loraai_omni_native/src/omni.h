@@ -25,6 +25,7 @@ public:
     Vector step(const Vector & input);
     Vector logits(const Vector & hidden);
     Vector embedding(int id);
+    void rewind(int prefix_length);
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;

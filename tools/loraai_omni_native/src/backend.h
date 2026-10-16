@@ -67,6 +67,7 @@ public:
     Vector logits(const Vector & input, int group = -1);
     Vector embedding(int id, int group = -1);
     void reset();
+    void rewind(int prefix_length);
 private:
     std::shared_ptr<DeviceModel> model;
     ggml_context * cache_context = nullptr;

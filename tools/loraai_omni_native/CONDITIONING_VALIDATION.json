@@ -1,0 +1,104 @@
+{
+  "version": "0.2.0-duplex-rc3",
+  "date": "2026-10-16",
+  "fix": {
+    "capture_capacity": "min(actual loaded Thinker context, 65536 Talker positions)",
+    "projection_batch_rows": 1024,
+    "input_rows_discarded": false,
+    "model_precision_changed": false,
+    "actual_context_prefix_reservation": "Explicit voice_talker_context_exhausted before projection if the user conditioning leaves no prefix/frame space."
+  },
+  "hardware": "RTX 5090, 32 GiB, driver 595.99.02",
+  "models": "Qwen3-Omni Thinker Q4_K_M, matching BF16 mmproj, mixed-Q4 Talker, BF16 Predictor/Code2Wav",
+  "context_capacity": 65536,
+  "baseline": [
+    {
+      "route": "voice",
+      "case": "short",
+      "text": "\u0413\u043e\u0442\u043e\u0432\u043e.",
+      "done": true,
+      "seconds": 5.150706229998832,
+      "samples": 20565,
+      "pcm_sha256": "fd7933202cc50912f8401bcc3e159c240bd8038713e61820439010d3d4e27009"
+    },
+    {
+      "route": "voice",
+      "case": "long",
+      "error": "native_omni_generation_failed",
+      "seconds": 1.3132362409996858,
+      "samples": 0,
+      "pcm_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "fixed": [
+    {
+      "route": "voice",
+      "case": "short",
+      "text": "\u0413\u043e\u0442\u043e\u0432\u043e.",
+      "done": true,
+      "seconds": 5.004429753000295,
+      "samples": 20565,
+      "pcm_sha256": "fd7933202cc50912f8401bcc3e159c240bd8038713e61820439010d3d4e27009"
+    },
+    {
+      "route": "voice",
+      "case": "long",
+      "text": "\u0413\u043e\u0442\u043e\u0432\u043e.",
+      "done": true,
+      "seconds": 22.49440450200018,
+      "samples": 14805,
+      "pcm_sha256": "aedbbce3e70c6f4c525ffb56333a661029488975733f15ddf61250e34f255e4d"
+    },
+    {
+      "route": "duplex",
+      "case": "long",
+      "text": "\u0413\u043e\u0442\u043e\u0432\u043e.",
+      "done": true,
+      "seconds": 17.488076407000335,
+      "samples": 14805,
+      "pcm_sha256": "aedbbce3e70c6f4c525ffb56333a661029488975733f15ddf61250e34f255e4d"
+    }
+  ],
+  "audio_and_two_images": [
+    {
+      "route": "voice",
+      "case": "long-media",
+      "text": "\u0413\u043e\u0442\u043e\u0432\u043e.",
+      "done": true,
+      "seconds": 23.92018532200018,
+      "samples": 18645,
+      "pcm_sha256": "5da8a6b49cb6b94831a8ee04ed5b50c78381a563b142dd06e0efcb3906ec959f"
+    },
+    {
+      "route": "duplex",
+      "case": "long-media",
+      "text": "\u0413\u043e\u0442\u043e\u0432\u043e.",
+      "done": true,
+      "seconds": 23.366673986000023,
+      "samples": 18645,
+      "pcm_sha256": "5da8a6b49cb6b94831a8ee04ed5b50c78381a563b142dd06e0efcb3906ec959f"
+    }
+  ],
+  "short_pcm_unchanged": true,
+  "legacy_and_duplex_pcm_identical": true,
+  "memory_text": {
+    "peak_MiB": 29250,
+    "total_MiB": 32607,
+    "remaining_at_peak_MiB": 3357,
+    "sample_interval_ms": 100
+  },
+  "memory_multimodal": {
+    "peak_MiB": 29467,
+    "total_MiB": 32607,
+    "remaining_at_peak_MiB": 3140,
+    "sample_interval_ms": 100
+  },
+  "native_checks": [
+    "Capture beyond 4K and exact text/multimodal row preservation passed",
+    "Actual context bounds and latest-user reset passed",
+    "Duplex state-machine regression passed",
+    "Integrated CPU upgrade rebuild and capture/duplex tests passed"
+  ],
+  "issue": "Obsolete 3787/4096-row guards rejected valid long multimodal conditioning; the new bounds follow the loaded context.",
+  "scope": "Historical native conditioning regression; no application deployment qualification."
+}

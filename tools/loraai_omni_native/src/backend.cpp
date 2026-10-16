@@ -11,6 +11,12 @@
 namespace lora_omni {
 namespace {
 size_t resident_bytes = 0;
+void initialize_backends() {
+    // Registry mutation belongs to initialization, never a speech graph running
+    // concurrently with llama's Thinker/backend enumeration.
+    static std::once_flag initialized;
+    std::call_once(initialized, [] { ggml_backend_load_all(); });
+}
 thread_local std::function<bool()> cancellation;
 thread_local std::function<void()> memory_pressure;
 void check_cancelled() {
@@ -30,7 +36,7 @@ DeviceCancellationScope::~DeviceCancellationScope() { cancellation = std::move(p
 DeviceMemoryPressureScope::DeviceMemoryPressureScope(std::function<void()> reclaim): previous(std::move(memory_pressure)) { memory_pressure = std::move(reclaim); }
 DeviceMemoryPressureScope::~DeviceMemoryPressureScope() { memory_pressure = std::move(previous); }
 ggml_backend_dev_t select_device() {
-    ggml_backend_load_all();
+    initialize_backends();
     if (const char * name = std::getenv("OMNI_DEVICE")) {
         auto * device = ggml_backend_dev_by_name(name);
         if (!device || (ggml_backend_dev_type(device) != GGML_BACKEND_DEVICE_TYPE_GPU && ggml_backend_dev_type(device) != GGML_BACKEND_DEVICE_TYPE_IGPU))
@@ -62,12 +68,14 @@ size_t device_available_bytes() {
     available = std::min(available, budget > resident_bytes ? budget - resident_bytes : size_t(0));
     return available;
 }
+static void release_unused_device_models();
 void ensure_device_memory(size_t bytes) {
     auto fits = [&] { return bytes + device_reserve_bytes() <= device_available_bytes(); };
     if (!fits()) release_unused_device_workspaces();
+    if (!fits()) release_unused_device_models();
     if (!fits() && memory_pressure) memory_pressure();
     check_cancelled();
-    if (!fits()) throw std::runtime_error("Omni GPU KV memory budget exceeded");
+    if (!fits()) throw std::runtime_error("Omni GPU working-set memory budget exceeded");
 }
 bool use_device_backend() {
     const char * setting = std::getenv("OMNI_BACKEND");
@@ -78,7 +86,7 @@ bool use_device_backend() {
 DeviceModel::DeviceModel(const std::string & path, bool float_weights): float_weights(float_weights), path(path) {
     bool accounted = false;
     try {
-        ggml_backend_load_all();
+        initialize_backends();
         backend = ggml_backend_dev_init(select_device(), nullptr);
         if (!backend) throw std::runtime_error("Omni requires a GPU backend; set OMNI_BACKEND=cpu for the reference path");
         omni::Reader reader(path);
@@ -150,8 +158,7 @@ ggml_tensor * DeviceModel::weight(const std::string & name) const {
     if (paged && !tensor->buffer) {
         auto * buft = ggml_backend_get_default_buffer_type(backend);
         const size_t size = ggml_backend_buft_get_alloc_size(buft, tensor);
-        const size_t available = device_available_bytes();
-        if (size + device_reserve_bytes() > available) throw std::runtime_error("Omni GPU weight page exceeds available memory; reduce other GPU workloads or use quantized speech weights");
+        ensure_device_memory(size);
         auto * page = ggml_backend_buft_alloc_buffer(buft, size);
         if (!page) throw std::runtime_error("cannot allocate Omni GPU weight page");
         if (ggml_backend_tensor_alloc(page, tensor, ggml_backend_buffer_get_base(page)) != GGML_STATUS_SUCCESS) {
@@ -193,7 +200,7 @@ ggml_tensor * DeviceModel::experts(ggml_context * ctx, const std::string & name,
     const size_t slice = source.bytes / size_t(full->ne[2]);
     auto * tensor = ggml_new_tensor_3d(ctx, full->type, full->ne[0], full->ne[1], ids.size());
     const size_t required = ggml_backend_buft_get_alloc_size(ggml_backend_get_default_buffer_type(backend), tensor);
-    if (required + device_reserve_bytes() > device_available_bytes()) throw std::runtime_error("Omni selected experts exceed GPU budget");
+    ensure_device_memory(required);
     auto * page = ggml_backend_alloc_buffer(backend, required);
     if (!page) throw std::runtime_error("cannot allocate selected Omni experts");
     if (ggml_backend_tensor_alloc(page, tensor, ggml_backend_buffer_get_base(page)) != GGML_STATUS_SUCCESS) {
@@ -236,8 +243,8 @@ void release_unused_device_workspaces() {
     }
 }
 std::shared_ptr<DeviceModel> device_model(const std::string & path, bool float_weights) {
-    ggml_backend_load_all();
-    // Inference is serialized by the server. Keep weights until the scope unloads.
+    initialize_backends();
+    // Only the speech lane owns this cache. Thinker has independent backends.
     auto & loaded = model_cache();
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);

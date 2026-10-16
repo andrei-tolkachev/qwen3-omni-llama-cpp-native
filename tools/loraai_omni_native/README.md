@@ -17,7 +17,7 @@ cmake -S /path/to/llama.cpp -B /path/to/llama.cpp/build-omni \
   -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON \
   -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_TESTS=OFF \
   -DLLAMA_OMNI=ON -DGGML_CUDA=ON
-cmake --build /path/to/llama.cpp/build-omni --target omni-server omni-generate omni-decode omni-quantize -j4
+cmake --build /path/to/llama.cpp/build-omni --target omni-server omni-generate omni-decode omni-quantize omni-duplex-test omni-voice-capture-test -j4
 ```
 
 Choose CUDA architectures appropriate to the destination machine with the normal CMake options; no architecture is pinned by the extension. Executables from an integrated build are in `build-omni/bin`. A matching prebuilt shared-library llama build can also be linked with a separate CMake invocation using `-DLLAMA_SOURCE_DIR=/path/to/llama.cpp` and `-DLLAMA_BUILD_DIR=/path/to/llama.cpp/build-omni`. The integrated build above is the recommended, better-tested path. Never mix binaries/libraries from different builds.
@@ -109,9 +109,9 @@ data: {"generation_id":"...","text":"Hello","finish_reason":"stop","audio":{"for
 
 `done` above is abbreviated. Protocol 2 requires `stream:true` and returns audio totals, **not a second full WAV**. Events `start`, `audio_chunk` and `done` carry `generation_id`; text deltas belong to their enclosing response stream. `error` is terminal; a disconnected stream without `done` is incomplete. Protocol 1/non-stream JSON returns a complete WAV in `audio.data` for compatibility and accumulates it in host RAM. Use protocol 2 for long replies.
 
-Cancel with POST `/v1/omni/cancel`, body `{"request_id":"..."}`, using the same authentication. Disconnect also cancels. Thinker checks cancellation while generating; speech checks between GPU graphs, layers and frames. A currently running kernel finishes before it can stop. The cancel response is an acknowledgement, not a GPU-completion barrier: wait for the active voice response to terminate before starting another turn. The server serializes inference. Cancellation of a non-active request ID does not cancel a different request. Clients must clear playback immediately and reject stale generations; the server cannot flush a remote sound device.
+Cancel with POST `/v1/omni/cancel`, body `{"request_id":"..."}`, using the same authentication. Disconnect also cancels. Thinker checks cancellation while generating; speech checks between GPU graphs, layers and frames. A currently running kernel finishes before it can stop. The cancel response is an acknowledgement, not a GPU-completion barrier: wait for the active voice response to terminate before starting another turn. The legacy voice endpoint serializes requests; a busy model returns HTTP 409. Cancellation of a non-active request ID does not cancel a different request. Clients must clear playback immediately and reject stale generations; the server cannot flush a remote sound device.
 
-Input audio is a recorded turn using upstream `input_audio` blocks. This API is not a continuous full-duplex microphone transport. Speaker IDs 2301–2303 select native voices. Optional `speech_seed` (0–4294967295) makes codec sampling repeatable. Incomplete text, exhausted speech frames and missing EOS report errors instead of a successful partial reply.
+Input audio is a recorded turn using upstream `input_audio` blocks. For simultaneous input and speech, use the opt-in [duplex session API](DUPLEX.md). Speaker IDs 2301–2303 select native voices. Optional `speech_seed` (0–4294967295) makes codec sampling repeatable. Incomplete text, exhausted speech frames and missing EOS report errors instead of a successful partial reply.
 
 ## Long replies and memory
 
@@ -135,7 +135,7 @@ Weights are paged by layer when needed; Talker loads selected experts. Speech ru
 
 ## Context and visual input
 
-A 65,536-token context was checked using a synthetic 64,200-token prompt. The server receives exactly the messages supplied by the caller; it does not add persistent memory or automatic conversation compaction. Latest-user hidden states already attend to the earlier prompt. Talker capture is bounded to 3,787 rows and fails explicitly when exceeded. 128K is not qualified.
+A 65,536-token context was checked using a synthetic 64,200-token prompt. The server receives exactly the messages supplied by the caller; it does not add persistent memory or automatic conversation compaction. Latest-user hidden states already attend to the earlier prompt. Talker capture now uses the actual loaded context, bounded by its 65,536-position capacity; the old 3,787-row cap was removed in rc3. Callers can supply retrieved references through the ephemeral `input_context` capability so they remain available to Thinker without becoming speaker input. 128K is not qualified.
 
 `image_url` blocks can accompany the current audio/text turn. No camera or screen capture runs inside the server. Optional `observe_only:true` runs Thinker without speech and supports the same cancellation route. This is sampled-image observation, not a temporal video decoder.
 
@@ -174,4 +174,19 @@ python3 tests/check_codec_stream.py --model /models/omni/omni-experimental/code2
 python3 tests/check_voice_dialogue.py --url http://127.0.0.1:8081 --wav /path/to/synthetic-test.wav
 ```
 
-`check_upgrade.py` uses BF16 fixtures; it is a numerical probe, not broad BF16 stability qualification. Build/run `omni-cache-growth-test` with the Predictor GGUF for KV growth comparison; `omni-audio-join-test` and `omni-visual-reply-test` need no weights. `omni-server-security-test` uses the real upstream HTTP middleware on an ephemeral loopback port, without model weights, to check authentication on voice and cancel routes.
+`check_upgrade.py` uses BF16 fixtures; it is a numerical probe, not broad BF16 stability qualification. Build/run `omni-cache-growth-test` with the Predictor GGUF for KV growth comparison; `omni-audio-join-test` and `omni-visual-reply-test` need no weights. `omni-server-security-test` uses the real upstream HTTP middleware on an ephemeral loopback port, without model weights, to check authentication on all ten voice, cancel and duplex routes.
+
+## True Full Duplex sessions
+
+Set `OMNI_DUPLEX=1` to keep Thinker resident while an independent speech worker
+runs on GPU. The session API accepts PCM/WAV fragments and images, keeps
+revision-fenced dialogue state, and supports playback acknowledgements,
+auxiliary Thinker queries and exact context measurement/replacement.
+
+Opt in with `adaptive_dialogue:true` for append-only heard prefixes, smaller
+phrases, bounded synthesis lead and exact Talker KV prefix reuse. An optional
+`spoken_text` continuation uses a literal grammar before native speech synthesis.
+The server supplies inference primitives; capture, playback and semantic
+conversation policy are implemented by callers. See [DUPLEX.md](DUPLEX.md),
+[native scheduling evidence](DUPLEX_VALIDATION.json) and
+[adaptive-mode evidence](ADAPTIVE_DIALOGUE_VALIDATION.json).

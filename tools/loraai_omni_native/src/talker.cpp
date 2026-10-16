@@ -18,6 +18,10 @@ struct Talker::Impl {
 };
 Talker::Talker(const std::string & model, int capacity, int threads): impl(new Impl(model, capacity, threads)) {}
 Talker::~Talker() = default;
+void Talker::rewind(int prefix_length) {
+    if (!impl->device) throw std::runtime_error("Talker prefix reuse requires device backend");
+    impl->device->rewind(prefix_length);
+}
 Vector Talker::step(const Vector & input) {
     if (impl->device) return impl->device->step(input);
     Vector value = input;

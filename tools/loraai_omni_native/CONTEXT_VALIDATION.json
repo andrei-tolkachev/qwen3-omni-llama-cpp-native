@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-16",
+  "speech_arithmetic_changed": false,
+  "quantization_changed": false,
+  "benchmark": [
+    {
+      "mode": "inline_reference",
+      "text": "\u041f\u0440\u0438\u0432\u0435\u0442",
+      "text_seconds": 1.7821233860013308,
+      "first_audio_seconds": 30.18442658300046,
+      "total_seconds": 30.185428935001255,
+      "samples": 12885,
+      "pcm_sha256": "57d0114f59391f8b30fb4cc7752e1bfc760daf8a8f0cc6bdbe8fb77320ebfa33"
+    },
+    {
+      "mode": "thinker_context",
+      "text": "\u0413\u043e\u0442\u043e\u0432\u043e",
+      "text_seconds": 1.7184356980014854,
+      "first_audio_seconds": 3.387003679001282,
+      "total_seconds": 3.387677894001172,
+      "samples": 18645,
+      "pcm_sha256": "ea18dbbf73ce9e1accced5c1aa9ca12f04f3c5ac0005b49eb908ea3684e6acc0"
+    }
+  ],
+  "benchmark_limits": "Synthetic 640x480 camera, recorded WAV and 7000 reference tokens; single before/after pair, not a general latency guarantee. Responses differ because reference role was corrected; PCM identity is not claimed.",
+  "hardware": "RTX 5090, 32 GiB; Qwen3-Omni Thinker Q4_K_M, mixed-Q4 Talker, BF16 Predictor and Code2Wav",
+  "native_change": "Optional ephemeral input context is supplied to Thinker only; original input and multimodal conditioning are retained.",
+  "scope": "Historical isolated native reference-context comparison, not a general speed guarantee."
+}

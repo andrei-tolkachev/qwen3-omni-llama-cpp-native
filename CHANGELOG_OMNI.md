@@ -1,5 +1,17 @@
 # Omni extension release notes
 
+## v0.2.0 — True Full Duplex (2026-10-16)
+
+- Independent Thinker and GPU speech workers with lossless PCM/WAV fragment joining, image input, bounded queues and revision fences.
+- Adaptive append-only heard history, phrase playback acknowledgements, cancellation after synthesis and recomputation of input dependent on unheard output.
+- Auxiliary Thinker queries, final-input replacement, protected context compare-and-swap and exact-text speech continuations.
+- Speech-first memory placement, allocation-driven paging, bounded projection workspaces, shorter phrases, synthesis pacing and exact per-generation Talker KV-prefix reuse.
+- Keep turn-local context immediately before the current input without mutating committed history or adding retrieval text to speech conditioning.
+- Remove obsolete 3787/4096-row conditioning guards; preserve the loaded context limits and multimodal rows.
+- Native concurrency, capture, HTTP authentication and numerical regressions; matching full-source/upgrade-kit archives and updated English/Russian documentation.
+- Native API scope only: capture, playback and automatic conversation policy are caller responsibilities. Historical evidence and fresh release checks are separated.
+
+
 ## v0.1.1
 
 - Standalone native-only documentation and historical validation.

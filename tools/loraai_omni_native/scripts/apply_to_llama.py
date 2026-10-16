@@ -21,6 +21,14 @@ def main():
     p.add_argument('--check',action='store_true');p.add_argument('--replace',action='store_true',help='Replace a reviewed existing Omni module, retaining build/release folders')
     a=p.parse_args();llama=a.llama.resolve();target=llama/'tools/loraai_omni_native'
     assert (llama/'include/llama.h').is_file(),'Not a llama.cpp source directory'
+    # Duplex cancellation uses a FIFO response-reader barrier. Fail before any
+    # mutation if a new upstream removed the server interfaces it depends on.
+    for relative, symbol in [('tools/server/server-context.h', 'get_response_reader'),
+                             ('tools/server/server-queue.h', 'post_task'),
+                             ('tools/server/server-task.h', 'SERVER_TASK_TYPE_SLOT_GET')]:
+        header = llama / relative
+        if not header.is_file() or symbol not in header.read_text():
+            raise SystemExit('Duplex server API needs review: ' + relative + ' / ' + symbol)
     patch=ROOT/'patches/0001-cuda-honor-f32-precision.patch'
     forward=run('git','-C',str(llama),'apply','--check',str(patch))
     reverse=run('git','-C',str(llama),'apply','--reverse','--check',str(patch))

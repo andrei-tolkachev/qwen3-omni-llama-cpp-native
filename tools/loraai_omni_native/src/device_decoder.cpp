@@ -47,6 +47,13 @@ DeviceDecoder::~DeviceDecoder() {
     ggml_free(cache_context);
 }
 void DeviceDecoder::reset() { position = 0; }
+void DeviceDecoder::rewind(int prefix_length) {
+    if (prefix_length < 0 || prefix_length > position)
+        throw std::runtime_error("invalid Omni KV prefix");
+    // Attention only sees [0, position]. Later writes overwrite the discarded
+    // suffix; the retained prefix belongs to this decoder and this generation.
+    position = prefix_length;
+}
 Vector DeviceDecoder::step(const Vector & input) {
     grow(position + 1);
     if (input.size() != 1024) throw std::runtime_error("Omni decoder input or cache capacity invalid");
@@ -171,6 +178,18 @@ Vector DeviceDecoder::embedding(int id, int group) {
     return g.run(ggml_get_rows(g.ctx, g.weight(name), g.integers({id})));
 }
 Vector device_project(const std::string & path, const Vector & input, const std::string & mode) {
+    // Bound projection workspaces for long audio/video and retrieved context.
+    constexpr size_t batch_values = 1024 * 2048;
+    if (input.size() > batch_values) {
+        Vector result;
+        result.reserve(input.size() / 2);
+        for (size_t offset = 0; offset < input.size(); offset += batch_values) {
+            Vector batch(input.begin() + offset, input.begin() + std::min(input.size(), offset + batch_values));
+            auto projected = device_project(path, batch, mode);
+            result.insert(result.end(), projected.begin(), projected.end());
+        }
+        return result;
+    }
     auto model = device_model(path);
     DeviceGraph g(*model);
     const std::string stem = "talker." + mode + "_projection.";

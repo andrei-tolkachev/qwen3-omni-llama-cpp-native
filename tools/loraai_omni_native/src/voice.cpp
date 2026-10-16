@@ -74,11 +74,15 @@ std::string talker_model_path(const std::string & model) {
     std::fprintf(stderr, "Omni: Q4 Talker not found; using BF16. A CUDA expert-matmul stall is known on one BF16 input; see README.\n");
     return (models / "talker-experts-packed-bf16-staging.gguf").string();
 }
+struct SpeechPrefixCache {
+    std::unique_ptr<Talker> talker;
+    Vector prefix;
+};
 static VoiceResult speak_part(const std::string & model, const std::vector<CapturedRow> & captured,
                   const std::vector<llama_token> & tokens, int speaker, int max_frames, int threads,
                   const std::function<bool()> & stop, std::optional<uint32_t> seed,
-                  const std::function<void(const Vector &)> & emit_audio) {
-    if (speaker < 2301 || speaker > 2303 || max_frames < 1 || max_frames > 65536 || captured.size() > 4096)
+                  const std::function<void(const Vector &)> & emit_audio, SpeechPrefixCache * cache) {
+    if (speaker < 2301 || speaker > 2303 || max_frames < 1 || max_frames > int(speech_context_capacity) || captured.size() > speech_context_capacity)
         throw std::runtime_error("invalid speech limits");
     DeviceCancellationScope cancellation(stop);
     if (stop()) throw std::runtime_error("voice_cancelled");
@@ -112,6 +116,8 @@ static VoiceResult speak_part(const std::string & model, const std::vector<Captu
         } else append(text_inputs, embedding.row(entry.token));
     }
     if (multimodal.empty()) throw std::runtime_error("no uncached user conditioning captured");
+    if (multimodal.size() + 9 >= speech_context_capacity)
+        throw std::runtime_error("voice_talker_context_exhausted");
     auto text_projection = project_text(talker_model, text_inputs, threads);
     auto hidden_projection = hidden_inputs.empty() ? Vector{} : project_hidden(talker_model, hidden_inputs, threads);
     Vector prefill;
@@ -138,7 +144,9 @@ static VoiceResult speak_part(const std::string & model, const std::vector<Captu
     const auto bos = row(special, 0), eos_text = row(special, 1), pad = row(special, 2);
     max_frames = std::min(max_frames, 65536 - int(prefill.size() / 1024) - 9);
     if (max_frames < 1) throw std::runtime_error("Talker context limit exceeded");
-    auto talker = std::make_unique<Talker>(talker_model, int(prefill.size() / 1024) + 9 + max_frames, threads);
+    auto owned = cache ? std::move(cache->talker) : std::unique_ptr<Talker>{};
+    if (!owned) owned = std::make_unique<Talker>(talker_model, int(prefill.size() / 1024) + 9 + max_frames, threads);
+    auto * talker = owned.get();
     auto predictor = std::make_unique<Predictor>((models / "code-predictor-staging-bf16.gguf").string(), threads);
     for (int i = 0; i < 3; ++i) append(prefill, row(assistant, i));
     const int prefix_ids[] = {2155, 2156, 2157, speaker, 2148, 2149};
@@ -150,8 +158,14 @@ static VoiceResult speak_part(const std::string & model, const std::vector<Captu
     }
 
     Vector hidden;
+    const Vector prefix(prefill.begin(), prefill.end()-1024);
+    const bool reuse = cache && cache->prefix == prefix;
+    if (cache) {
+        talker->rewind(reuse ? int(prefix.size()/1024) : 0);
+        cache->prefix = prefix;
+    }
     std::fprintf(stderr, "Omni speech: prefill %zu rows\n", prefill.size() / 1024);
-    for (size_t i = 0; i < prefill.size() / 1024; ++i) {
+    for (size_t i = reuse ? prefix.size()/1024 : 0; i < prefill.size() / 1024; ++i) {
         if (stop()) throw std::runtime_error("voice_cancelled");
         hidden = talker->step(row(prefill, i));
     }
@@ -198,8 +212,10 @@ static VoiceResult speak_part(const std::string & model, const std::vector<Captu
     if (!frame_count) throw std::runtime_error("Talker produced no audio");
     if (stop()) throw std::runtime_error("voice_cancelled");
     predictor.reset();
-    talker.reset();
-    if (use_device_backend() && device_available_bytes() < 1024ULL * 1024 * 1024 + device_reserve_bytes()) release_device_models();
+    if (cache) cache->talker = std::move(owned); else owned.reset();
+    // Reclaim graph workspaces first. Weight eviction is driven by a measured
+    // allocation failure, not a fixed free-memory threshold on every phrase.
+    if (use_device_backend()) release_unused_device_workspaces();
     if (!eos) throw std::runtime_error("voice_audio_incomplete");
     if (use_device_backend()) flush();
     else pcm = decode_audio((models / "code2wav-staging-bf16.gguf").string(), frames, threads);
@@ -210,10 +226,13 @@ static VoiceResult speak_part(const std::string & model, const std::vector<Captu
 VoiceResult speak(const std::string & model, const llama_vocab * vocab, const std::vector<CapturedRow> & captured,
                   const std::string & reply, int speaker, int max_frames, int threads, const std::function<bool()> & stop,
                   const std::function<void()> & speech_ready, std::optional<uint32_t> seed,
-                  const std::function<void(const Vector &)> & emit_audio) {
+                  const std::function<void(const Vector &)> & emit_audio,
+                  const std::function<void(size_t, size_t)> & phrase_boundary,
+                  int phrase_tokens, int max_phrase_tokens) {
     // Small complete phrases keep long TTS aligned with text. This is a work
     // batch size, not a reply limit. Tokenize before any Thinker unload.
     std::vector<std::vector<llama_token>> parts;
+    std::vector<size_t> text_ends;
     size_t begin = 0, sentence_end = 0;
     for (size_t i = 0; i <= reply.size(); ++i) {
         const bool end = i == reply.size();
@@ -223,9 +242,10 @@ VoiceResult speak(const std::string & model, const llama_vocab * vocab, const st
         const char previous = reply[i - 1];
         if (previous == '.' || previous == '!' || previous == '?' || (!end && reply[i] == '\n')) sentence_end = i;
         const auto candidate = tokenize(vocab, reply.substr(begin, i - begin));
-        if (end || (candidate.size() >= 160 && sentence_end > begin) || candidate.size() >= 256) {
+        if (end || (candidate.size() >= size_t(phrase_tokens) && sentence_end > begin) || candidate.size() >= size_t(max_phrase_tokens)) {
             const size_t split = end ? i : sentence_end > begin ? sentence_end : i;
             parts.push_back(tokenize(vocab, reply.substr(begin, split - begin)));
+            text_ends.push_back(split);
             begin = split;
             while (begin < reply.size() && (reply[begin] == ' ' || reply[begin] == '\n' || reply[begin] == '\t')) ++begin;
             sentence_end = begin; i = begin ? begin - 1 : 0;
@@ -234,20 +254,24 @@ VoiceResult speak(const std::string & model, const llama_vocab * vocab, const st
     if (parts.empty()) throw std::runtime_error("voice_text_empty");
     speech_ready();
     Vector pcm;
+    size_t emitted_samples = 0;
     AudioJoin join([&](const Vector & samples) {
         if (stop()) throw std::runtime_error("voice_cancelled");
         if (emit_audio) emit_audio(samples); else append(pcm, samples);
+        emitted_samples += samples.size();
     });
     int frames = 0;
+    SpeechPrefixCache prefix_cache;
     for (size_t i = 0; i < parts.size(); ++i) {
         if (stop()) throw std::runtime_error("voice_cancelled");
         std::fprintf(stderr, "Omni speech phrase %zu/%zu: %zu text tokens\n", i + 1, parts.size(), parts[i].size());
         join.next_phrase();
         const auto part = speak_part(model, captured, parts[i], speaker, max_frames, threads, stop,
             seed ? std::optional<uint32_t>(*seed + uint32_t(i)) : std::nullopt,
-            [&](const Vector & samples) { join.push(samples); });
+            [&](const Vector & samples) { join.push(samples); }, use_device_backend() ? &prefix_cache : nullptr);
         if (!use_device_backend()) join.push(part.pcm);
         frames += part.frames;
+        if (phrase_boundary) phrase_boundary(text_ends[i], emitted_samples + join.pending_samples());
     }
     join.finish();
     return {std::move(pcm), frames, true};
